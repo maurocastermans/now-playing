@@ -53,16 +53,16 @@ This service runs as the user who executed the setup.sh and should be enabled to
 
 You control the service via `systemctl` `start` | `stop` | `status` | `restart` | `enable` | `disable` `<service-name>`. For example, to get the status of `shazampi-eink-display.service`:
 ```bash
-pi@shazampi:~/shazampi-eink $ sudo systemctl status now-playing-eink-display.service
-  now-playing-eink-display.service - Shazampi eInk Display service
-     Loaded: loaded (/etc/systemd/system/now-playing-eink-display.service; enabled; preset: enabled)
-    Drop-In: /etc/systemd/system/now-playing-eink-display.service.d
+pi@shazampi:~/shazampi-eink $ sudo systemctl status now-playing-display.service
+  now-playing-display.service - Shazampi eInk Display service
+     Loaded: loaded (/etc/systemd/system/now-playing-display.service; enabled; preset: enabled)
+    Drop-In: /etc/systemd/system/now-playing-display.service.d
              └─shazampi-eink-display_env.conf
      Active: active (running) since Wed 2024-08-28 21:46:29 EDT; 29min ago
    Main PID: 2084 (python3)
       Tasks: 15 (limit: 167)
         CPU: 1min 43.599s
-     CGroup: /system.slice/now-playing-eink-display.service
+     CGroup: /system.slice/now-playing-display.service
              └─2084 /home/pi/shazampi-eink/shazampienv/bin/python3 /home/pi/shazampi-eink/python/shazam>
 
 Aug 28 22:12:00 shazampi shazampi-eink-display[2084]: Shazampi eInk Display - music detected, identifying...

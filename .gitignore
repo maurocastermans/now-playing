@@ -7,5 +7,5 @@ __pycache__
 /workspace.xml
 .idea/
 config/*
-/now-playingenv
+/now-playing
 /.env

@@ -5,12 +5,12 @@ StartLimitIntervalSec=300
 StartLimitBurst=5
 
 [Service]
-SyslogIdentifier=now-playing-eink-display
+SyslogIdentifier=now-playing-display
 LimitRTPRIO=99
 Restart=on-failure
 RestartSec=1s
 KillSignal=SIGINT
-EnvironmentFile=/etc/systemd/system/now-playing-eink-display.service.d/now-playing-eink-display_env.conf
+EnvironmentFile=/etc/systemd/system/now-playing-display.service.d/now-playing-display_env.conf
 
 [Install]
 WantedBy=multi-user.target

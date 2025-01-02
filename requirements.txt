@@ -5,5 +5,5 @@ sounddevice
 numpy
 shazamio
 librosa
-inky[rpi,example-depends]
-tflite-runtime
+inky[rpi,example-depends]; sys_platform == "linux"
+tflite-runtime; sys_platform == "linux"

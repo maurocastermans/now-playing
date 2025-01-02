@@ -27,7 +27,7 @@ echo
 
 # Install required system dependencies
 echo "==> Installing required system dependencies..."
-sudo apt-get install python3-pip python3-venv python3-numpy git libopenjp2-7 libportaudio2 -y \
+sudo apt-get install python3.10 python3.10-venv python3.10-numpy git libopenjp2-7 libportaudio2 -y \
   && echo "✔ System dependencies installed successfully."
 echo
 
@@ -49,13 +49,13 @@ echo
 
 # Set up a Python virtual environment for the project
 echo "==> Setting up a Python virtual environment..."
-python3 -m venv --system-site-packages venv && echo "✔ Python virtual environment created."
+python3.10 -m venv --system-site-packages venv && echo "✔ Python virtual environment created."
 echo "Activating the virtual environment..."
-source ${install_path}/venv/bin/activate && echo "✔ Virtual environment activated."
+source ${install_path}/venv/bin/activate && echo "✔ Virtual environment activated using Python 3.10."
 
 # Install the required Python packages from the project's requirements file
 echo "==> Installing required Python packages..."
-pip3 install -r requirements.txt --upgrade && echo "✔ Python packages installed successfully."
+pip3.10 install -r requirements.txt --upgrade && echo "✔ Python packages installed successfully."
 echo
 
 # Create required directories for configuration and resources
@@ -141,7 +141,7 @@ fi
 UID_TO_USE=$(id -u)
 GID_TO_USE=$(id -g)
 sudo cp "${install_path}/setup/service_template/now-playing-display.service" /etc/systemd/system/
-sudo sed -i -e "/\[Service\]/a ExecStart=${install_path}/venv/bin/python3 ${install_path}/python/now_playing.py" /etc/systemd/system/now-playing-display.service
+sudo sed -i -e "/\[Service\]/a ExecStart=${install_path}/venv/bin/python3.10 ${install_path}/python/now_playing.py" /etc/systemd/system/now-playing-display.service
 sudo sed -i -e "/ExecStart/a WorkingDirectory=${install_path}" /etc/systemd/system/now-playing-display.service
 sudo sed -i -e "/EnvironmentFile/a User=${UID_TO_USE}" /etc/systemd/system/now-playing-display.service
 sudo sed -i -e "/User/a Group=${GID_TO_USE}" /etc/systemd/system/now-playing-display.service

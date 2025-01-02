@@ -1,0 +1,9 @@
+pillow
+requests
+scipy
+sounddevice
+numpy
+shazamio
+librosa
+inky[rpi,example-depends]
+tflite-runtime

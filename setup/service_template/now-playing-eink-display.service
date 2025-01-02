@@ -1,0 +1,16 @@
+[Unit]
+Description=Now Playing e-ink display service
+After=syslog.target network.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+SyslogIdentifier=now-playing-eink-display
+LimitRTPRIO=99
+Restart=on-failure
+RestartSec=1s
+KillSignal=SIGINT
+EnvironmentFile=/etc/systemd/system/now-playing-eink-display.service.d/now-playing-eink-display_env.conf
+
+[Install]
+WantedBy=multi-user.target

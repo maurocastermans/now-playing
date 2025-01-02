@@ -28,6 +28,7 @@ echo
 # Install required system dependencies
 echo "==> Installing required system dependencies..."
 sudo apt-get install python3-pip python3-venv python3-numpy git libopenjp2-7 libportaudio2 -y \
+  && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh \
   && echo "✔ System dependencies installed successfully."
 echo
 
@@ -55,6 +56,7 @@ source ${install_path}/venv/bin/activate && echo "✔ Virtual environment activa
 
 # Install the required Python packages from the project's requirements file
 echo "==> Installing required Python packages..."
+curl https://sh.rustup.rs -sSf | sh
 pip3 install -r requirements.txt --upgrade && echo "✔ Python packages installed successfully."
 echo
 

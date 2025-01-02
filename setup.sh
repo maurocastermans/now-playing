@@ -49,15 +49,9 @@ echo
 
 # Set up a Python virtual environment for the project
 echo "==> Setting up a Python virtual environment..."
-python3 -m venv --system-site-packages venv && echo "✔ Python virtual environment created."
+python3.10 -m venv --system-site-packages venv && echo "✔ Python virtual environment created."
 echo "Activating the virtual environment..."
-source ${install_path}/venv/bin/activate
-
-if [[ $(which python3) != "${install_path}/venv/bin/python3" ]]; then
-    echo "Error: Virtual environment activation failed." >&2
-    exit 1
-fi
-echo "✔ Virtual environment activated."
+source ${install_path}/venv/bin/activate && echo "✔ Virtual environment activated."
 
 # Install the required Python packages from the project's requirements file
 echo "==> Installing required Python packages..."

@@ -15,12 +15,12 @@ else
     exit 1
 fi
 
-# Add deadsnakes to be able to get older Python versions
-echo "==> Adding deadsnakes repository..."
-sudo apt-get install python3-launchpadlib ppa-purge
-sudo apt install software-properties-common -y
-sudo add-apt-repository ppa:deadsnakes/ppa -y
-sudo ppa-purge ppa:deadsnakes/ppa/ubuntu
+## Add deadsnakes to be able to get older Python versions
+#echo "==> Adding deadsnakes repository..."
+#sudo apt-get install python3-launchpadlib ppa-purge
+#sudo apt install software-properties-common -y
+#sudo add-apt-repository ppa:deadsnakes/ppa -y
+#sudo ppa-purge ppa:deadsnakes/ppa/ubuntu
 
 # Update package lists to ensure the system has the latest repository information
 echo "==> Updating package lists..."
@@ -32,13 +32,19 @@ echo "==> Upgrading system packages to the latest versions..."
 sudo apt upgrade -y && echo "✔ System packages upgraded successfully."
 echo
 
-echo "==> Installing python3.10..."
-sudo apt-get install python3.10
-echo
+echo "==> Installing Python3.10..."
+sudo apt-get install -y build-essential tk-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev libsqlite3-dev libssl-dev libbz2-dev libexpat1-dev liblzma-dev zlib1g-dev libffi-dev
+cd ~/Downloads
+wget https://www.python.org/ftp/python/3.10.14/Python-3.10.14.tgz
+sudo tar zxf Python-3.10.14.tgz
+cd Python-3.10.14
+sudo ./configure --enable-optimizations
+sudo make
+sudo make altinstall
 
 # Install required system dependencies
 echo "==> Installing required system dependencies..."
-sudo apt-get install python3.10-venv python3.10-distutils python3-numpy git libopenjp2-7 libportaudio2 -y \
+sudo apt-get install python3-numpy git libopenjp2-7 libportaudio2 -y \
   && echo "✔ System dependencies installed successfully."
 echo
 

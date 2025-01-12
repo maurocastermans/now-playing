@@ -6,3 +6,4 @@ numpy
 shazamio
 librosa
 inky
+tflite-runtime

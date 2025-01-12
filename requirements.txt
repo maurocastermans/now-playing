@@ -5,4 +5,4 @@ sounddevice
 numpy
 shazamio
 librosa
-inky[rpi,example-depends]; sys_platform == "linux"
+inky

@@ -70,9 +70,9 @@ python3.10 -m venv --system-site-packages venv && echo "✔ Python virtual envir
 echo "Activating the virtual environment..."
 source ${install_path}/venv/bin/activate && echo "✔ Virtual environment activated."
 
-# Upgrade pip explicitly for Python 3.10
-echo "==> Upgrading pip in the virtual environment..."
-pip install --upgrade pip && echo "✔ Pip upgraded successfully."
+## Upgrade pip explicitly for Python 3.10
+#echo "==> Upgrading pip in the virtual environment..."
+#pip install --upgrade pip && echo "✔ Pip upgraded successfully."
 
 # Install the required Python packages from the project's requirements file
 echo "==> Installing required Python packages..."

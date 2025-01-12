@@ -31,7 +31,7 @@ echo
 
 # Install required system dependencies
 echo "==> Installing required system dependencies..."
-sudo apt-get install python 3.10 python3.10 python3.10-venv python3.10-distutils python3-numpy git libopenjp2-7 libportaudio2 -y \
+sudo apt-get install python3.10 python3.10-venv python3.10-distutils python3-numpy git libopenjp2-7 libportaudio2 -y \
   && echo "✔ System dependencies installed successfully."
 echo
 

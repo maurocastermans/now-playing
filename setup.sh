@@ -17,7 +17,8 @@ fi
 
 # Add deadsnakes to be able to get older Python versions
 echo "==> Adding deadsnakes repository..."
-sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt install software-properties-common -y
+sudo add-apt-repository ppa:deadsnakes/ppa -y
 
 # Update package lists to ensure the system has the latest repository information
 echo "==> Updating package lists..."
@@ -29,9 +30,13 @@ echo "==> Upgrading system packages to the latest versions..."
 sudo apt upgrade -y && echo "✔ System packages upgraded successfully."
 echo
 
+echo "==> Installing python3.10..."
+sudo apt-get install python3.10
+echo
+
 # Install required system dependencies
 echo "==> Installing required system dependencies..."
-sudo apt-get install python3.10 python3.10-venv python3.10-distutils python3-numpy git libopenjp2-7 libportaudio2 -y \
+sudo apt-get install python3.10-venv python3.10-distutils python3-numpy git libopenjp2-7 libportaudio2 -y \
   && echo "✔ System dependencies installed successfully."
 echo
 

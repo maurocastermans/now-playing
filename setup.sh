@@ -32,15 +32,15 @@ echo "==> Upgrading system packages to the latest versions..."
 sudo apt upgrade -y && echo "✔ System packages upgraded successfully."
 echo
 
-echo "==> Installing Python3.10..."
-sudo apt-get install -y build-essential tk-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev libsqlite3-dev libssl-dev libbz2-dev libexpat1-dev liblzma-dev zlib1g-dev libffi-dev
-cd ~/Downloads
-wget https://www.python.org/ftp/python/3.10.14/Python-3.10.14.tgz
-sudo tar zxf Python-3.10.14.tgz
-cd Python-3.10.14
-sudo ./configure --enable-optimizations
-sudo make
-sudo make altinstall
+#echo "==> Installing Python3.10..."
+#sudo apt-get install -y build-essential tk-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev libsqlite3-dev libssl-dev libbz2-dev libexpat1-dev liblzma-dev zlib1g-dev libffi-dev
+#cd ~/Downloads
+#wget https://www.python.org/ftp/python/3.10.14/Python-3.10.14.tgz
+#sudo tar zxf Python-3.10.14.tgz
+#cd Python-3.10.14
+#sudo ./configure --enable-optimizations
+#sudo make
+#sudo make altinstall
 
 # Install required system dependencies
 echo "==> Installing required system dependencies..."

@@ -17,6 +17,7 @@ fi
 
 # Add deadsnakes to be able to get older Python versions
 echo "==> Adding deadsnakes repository..."
+sudo apt-get install python3-launchpadlib
 sudo apt install software-properties-common -y
 sudo add-apt-repository ppa:deadsnakes/ppa -y
 

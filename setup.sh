@@ -15,6 +15,10 @@ else
     exit 1
 fi
 
+# Add deadsnakes to be able to get older Python versions
+echo "==> Adding deadsnakes repository..."
+sudo add-apt-repository ppa:deadsnakes/ppa
+
 # Update package lists to ensure the system has the latest repository information
 echo "==> Updating package lists..."
 sudo apt update && echo "✔ Package lists updated successfully."
@@ -27,7 +31,7 @@ echo
 
 # Install required system dependencies
 echo "==> Installing required system dependencies..."
-sudo apt-get install python3-pip python3-venv python3-numpy git libopenjp2-7 libportaudio2 -y \
+sudo apt-get install python 3.10 python3.10 python3.10-venv python3.10-distutils python3-numpy git libopenjp2-7 libportaudio2 -y \
   && echo "✔ System dependencies installed successfully."
 echo
 
@@ -49,9 +53,13 @@ echo
 
 # Set up a Python virtual environment for the project
 echo "==> Setting up a Python virtual environment..."
-python3 -m venv --system-site-packages venv && echo "✔ Python virtual environment created."
+python3.10 -m venv --system-site-packages venv && echo "✔ Python virtual environment created."
 echo "Activating the virtual environment..."
 source ${install_path}/venv/bin/activate && echo "✔ Virtual environment activated."
+
+# Upgrade pip explicitly for Python 3.10
+echo "==> Upgrading pip in the virtual environment..."
+pip install --upgrade pip && echo "✔ Pip upgraded successfully."
 
 # Install the required Python packages from the project's requirements file
 echo "==> Installing required Python packages..."

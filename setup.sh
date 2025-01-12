@@ -17,9 +17,10 @@ fi
 
 # Add deadsnakes to be able to get older Python versions
 echo "==> Adding deadsnakes repository..."
-sudo apt-get install python3-launchpadlib
+sudo apt-get install python3-launchpadlib ppa-purge
 sudo apt install software-properties-common -y
 sudo add-apt-repository ppa:deadsnakes/ppa -y
+sudo ppa-purge ppa:deadsnakes/ppa/ubuntu
 
 # Update package lists to ensure the system has the latest repository information
 echo "==> Updating package lists..."

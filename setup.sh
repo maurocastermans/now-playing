@@ -25,15 +25,22 @@ echo "==> Upgrading system packages to the latest versions..."
 sudo apt upgrade -y && echo "✔ System packages upgraded successfully."
 echo
 
-echo "==> Installing Python3.9..."
-sudo apt-get install -y build-essential tk-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev libsqlite3-dev libssl-dev libbz2-dev libexpat1-dev liblzma-dev zlib1g-dev libffi-dev
-cd ~/Downloads
-wget https://www.python.org/ftp/python/3.9.19/Python-3.9.19.tgz
-sudo tar zxf Python-3.9.19.tgz
-cd Python-3.9.19
-sudo ./configure --enable-optimizations
-sudo make -j 4
-sudo make altinstall
+# Check if Python 3.9 is already installed
+echo "==> Checking if Python 3.9 is already installed..."
+if python3.9 --version &>/dev/null; then
+    echo "✔ Python 3.9 is already installed."
+else
+    echo "==> Installing Python3.9..."
+    sudo apt-get install -y build-essential tk-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev libsqlite3-dev libssl-dev libbz2-dev libexpat1-dev liblzma-dev zlib1g-dev libffi-dev
+    cd ~/Downloads
+    wget https://www.python.org/ftp/python/3.9.19/Python-3.9.19.tgz
+    sudo tar zxf Python-3.9.19.tgz
+    cd Python-3.9.19
+    sudo ./configure --enable-optimizations
+    sudo make -j 4
+    sudo make altinstall
+    echo "✔ Python 3.9 installed successfully."
+fi
 
 # Install required system dependencies
 echo "==> Installing required system dependencies..."

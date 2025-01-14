@@ -5,5 +5,5 @@ sounddevice
 numpy
 shazamio
 librosa
-inky==1.5.0
+inky[rpi,example-depends]==1.5.0
 tflite-runtime

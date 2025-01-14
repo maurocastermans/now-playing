@@ -25,19 +25,19 @@ echo "==> Upgrading system packages to the latest versions..."
 sudo apt upgrade -y && echo "✔ System packages upgraded successfully."
 echo
 
-#  echo "==> Installing Python3.9..."
-#  sudo apt-get install -y build-essential tk-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev libsqlite3-dev libssl-dev libbz2-dev libexpat1-dev liblzma-dev zlib1g-dev libffi-dev
-#  cd ~/Downloads
-#  wget https://www.python.org/ftp/python/3.9.19/Python-3.9.19.tgz
-#  sudo tar zxf Python-3.9.19.tgz
-#  cd Python-3.9.19
-#  sudo ./configure --enable-optimizations
-#  sudo make
-#  sudo make altinstall
+echo "==> Installing Python3.9..."
+sudo apt-get install -y build-essential tk-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev libsqlite3-dev libssl-dev libbz2-dev libexpat1-dev liblzma-dev zlib1g-dev libffi-dev
+cd ~/Downloads
+wget https://www.python.org/ftp/python/3.9.19/Python-3.9.19.tgz
+sudo tar zxf Python-3.9.19.tgz
+cd Python-3.9.19
+sudo ./configure --enable-optimizations
+sudo make -j 4
+sudo make altinstall
 
 # Install required system dependencies
 echo "==> Installing required system dependencies..."
-sudo apt-get install python3-pip python3-venv python3-numpy git libopenjp2-7 libportaudio2 -y \
+sudo apt-get install python3-numpy git libopenjp2-7 libportaudio2 -y \
   && echo "✔ System dependencies installed successfully."
 echo
 
@@ -59,11 +59,11 @@ echo
 
 # Set up a Python virtual environment for the project
 echo "==> Setting up a Python virtual environment..."
-python3 -m venv --system-site-packages venv && echo "✔ Python virtual environment created."
+python3.9 -m venv --system-site-packages venv && echo "✔ Python virtual environment created."
 echo "Activating the virtual environment..."
 source ${install_path}/venv/bin/activate && echo "✔ Virtual environment activated."
 
-# Upgrade pip explicitly for Python 3.10
+# Upgrade pip explicitly for Python 3.9
 echo "==> Upgrading pip in the virtual environment..."
 pip install --upgrade pip && echo "✔ Pip upgraded successfully."
 

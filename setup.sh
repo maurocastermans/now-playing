@@ -37,7 +37,7 @@ echo
 
 # Install required system dependencies
 echo "==> Installing required system dependencies..."
-sudo apt-get install python3-numpy git libopenjp2-7 libportaudio2 -y \
+sudo apt-get install python3-pip python3-venv python3-numpy git libopenjp2-7 libportaudio2 -y \
   && echo "✔ System dependencies installed successfully."
 echo
 
@@ -59,7 +59,7 @@ echo
 
 # Set up a Python virtual environment for the project
 echo "==> Setting up a Python virtual environment..."
-python3.9 -m venv --system-site-packages venv && echo "✔ Python virtual environment created."
+python3 -m venv --system-site-packages venv && echo "✔ Python virtual environment created."
 echo "Activating the virtual environment..."
 source ${install_path}/venv/bin/activate && echo "✔ Virtual environment activated."
 

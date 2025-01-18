@@ -18,22 +18,23 @@ class ShazamService:
         try:
             asyncio.set_event_loop(loop)
             result = loop.run_until_complete(self._recognize_song(audio_wav_buffer))
-            logger.info("result is ", result)
+            print("result is ", result)
             if result and 'track' in result:
-                track = result['track']
-                album_art = track.get('images', {}).get('coverart', 'No cover art available')
-                isrc = track.get('isrc', {})
-                offset = result['matches'][0].get('offset', {})
-                song_duration = fetch_song_duration(isrc)
-                return {
-                    'title': track.get('title', 'Unknown'),
-                    'artist': track.get('subtitle', 'Unknown'),
-                    'album': next((item['text'] for item in track.get('sections', [{}])[0].get('metadata', []) if
-                                   item.get('title') == 'Album'), 'Unknown'),
-                    'album_art': album_art,
-                    'offset': offset,
-                    'song_duration': song_duration
-                }
+                print("hallo")
+            #     track = result['track']
+            #     album_art = track.get('images', {}).get('coverart', 'No cover art available')
+            #     isrc = track.get('isrc', {})
+            #     offset = result['matches'][0].get('offset', {})
+            #     song_duration = fetch_song_duration(isrc)
+            #     return {
+            #         'title': track.get('title', 'Unknown'),
+            #         'artist': track.get('subtitle', 'Unknown'),
+            #         'album': next((item['text'] for item in track.get('sections', [{}])[0].get('metadata', []) if
+            #                        item.get('title') == 'Album'), 'Unknown'),
+            #         'album_art': album_art,
+            #         'offset': offset,
+            #         'song_duration': song_duration
+            #     }
             else:
                 return None
         except Exception as ex:

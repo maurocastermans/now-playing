@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 import requests
-from shazamio import Shazam
+from shazamio import Shazam, Serialize
 
 logger = logging.getLogger("now_playing_logger")
 
@@ -18,7 +18,8 @@ class ShazamService:
         try:
             asyncio.set_event_loop(loop)
             result = loop.run_until_complete(self._recognize_song(audio_wav_buffer))
-            print("result is ", result)
+            serialized = Serialize.full_track(result)
+            print(serialized)
             if result and 'track' in result:
                 print("hallo")
             #     track = result['track']

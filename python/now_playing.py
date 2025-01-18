@@ -50,7 +50,9 @@ class NowPlaying:
 
         # setup services
         self.audio_processing_service = AudioProcessingService()
+        logger.debug("Creating AudioRecordingService object...")
         self.audio_recording_service = AudioRecordingService()
+        logger.debug("AudioRecordingService object created.")
         self.music_detector = MusicDetector(self.recording_duration)
         self.shazam_service = ShazamService()
 

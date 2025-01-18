@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
+logger.propagate = True
 
 class AudioRecordingService:
     def __init__(self, device_substring: str = 'USB', sampling_rate: int = 44100, channels: int = 1) -> None:

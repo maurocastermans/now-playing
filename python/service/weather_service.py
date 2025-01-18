@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 import requests
 import logging
 
@@ -37,7 +37,7 @@ class WeatherService:
             logger.error(f"Error fetching weather data: {e}")
             return None
 
-    def _extract_weather_info(self, data: Optional[Dict]) -> Dict[str, Optional[str]]:
+    def _extract_weather_info(self, data: Optional[Dict]) -> Dict[str, Optional[Any]]:
         if not data:
             return self._default_weather_response()
 
@@ -54,10 +54,10 @@ class WeatherService:
             logger.error(f"Error processing weather data: missing key {e}")
             return self._default_weather_response()
 
-    def get_weather(self) -> Dict[str, Optional[str]]:
+    def get_weather(self) -> Dict[str, Optional[Any]]:
         raw_data = self.fetch_weather_data()
         weather_info = self._extract_weather_info(raw_data)
-        weather_info["fetched_at"] = datetime.datetime.now().isoformat()
+        weather_info["fetched_at"] = datetime.datetime.now()
         return weather_info
 
     def _default_weather_response(self) -> Dict[str, Optional[str]]:

@@ -4,7 +4,7 @@ import numpy as np
 from scipy.signal import resample
 import scipy.io.wavfile as wav
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("now_playing_logger")
 
 
 class AudioProcessingService:

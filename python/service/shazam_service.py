@@ -4,7 +4,7 @@ import logging
 import requests
 from shazamio import Shazam
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("now_playing_logger")
 
 class ShazamService:
     def __init__(self):

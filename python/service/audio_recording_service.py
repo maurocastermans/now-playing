@@ -3,7 +3,7 @@ import sounddevice as sd
 import numpy as np
 from typing import Optional, Tuple
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("now_playing_logger")
 
 class AudioRecordingService:
     def __init__(self, device_substring: str = 'USB', sampling_rate: int = 44100, channels: int = 1) -> None:

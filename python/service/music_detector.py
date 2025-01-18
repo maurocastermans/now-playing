@@ -3,7 +3,7 @@ import csv
 import logging
 import threading
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("now_playing_logger")
 
 cache_lock = threading.Lock()
 

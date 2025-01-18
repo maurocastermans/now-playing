@@ -3,7 +3,7 @@ from typing import Dict, Optional, Any
 import requests
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("now_playing_logger")
 
 
 class WeatherService:

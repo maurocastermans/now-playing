@@ -3,7 +3,9 @@ from typing import Dict, Optional, Any
 import requests
 import logging
 
-from python.util import Util
+import sys
+sys.path.append("..")
+from util import Util
 
 logger = logging.getLogger("now_playing_logger")
 

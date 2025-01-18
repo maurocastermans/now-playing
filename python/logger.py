@@ -4,10 +4,12 @@ from logging.handlers import RotatingFileHandler
 
 
 class Logger:
-    def __init__(self, log_file_path: str) -> None:
+    def __init__(self, log_file_path: str = "logs/app.log") -> None:
         self.log_file_path = log_file_path
         self.logger = logging.getLogger('now_playing_logger')
+        self._setup_logger()
 
+    def _setup_logger(self) -> None:
         # Set the overall logging level
         self.logger.setLevel(logging.DEBUG)
 

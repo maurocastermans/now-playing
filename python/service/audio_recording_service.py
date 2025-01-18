@@ -5,9 +5,9 @@ from typing import Optional, Tuple
 
 logger = logging.getLogger("now_playing_logger")
 
+
 class AudioRecordingService:
-    def __init__(self, device_substring: str = 'USB', sampling_rate: int = 44100, channels: int = 1) -> None:
-        logger.debug("Initializing AudioRecordingService...")
+    def __init__(self, sampling_rate: int, channels: int, device_substring: str = 'USB') -> None:
         self.device_substring = device_substring
         self.sampling_rate = sampling_rate
         self.channels = channels

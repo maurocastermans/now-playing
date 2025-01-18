@@ -2,25 +2,15 @@ import datetime
 from typing import Dict, Optional, Any
 import requests
 import logging
-
+from ..util import Util
 logger = logging.getLogger("now_playing_logger")
 
 
 class WeatherService:
     def __init__(self, api_key: str, geo_coordinates: str) -> None:
         self.api_key = api_key
-        self.latitude, self.longitude = self._parse_coordinates(geo_coordinates)
+        self.latitude, self.longitude = Util.parse_coordinates(geo_coordinates)
         self.temp_display_unit = '°C'
-
-    # TODO extract
-    @staticmethod
-    def _parse_coordinates(geo_coordinates: str) -> tuple[float, float]:
-        try:
-            lat, lon = map(lambda x: float(x.strip()), geo_coordinates.split(','))
-            return lat, lon
-        except ValueError:
-            logger.error("Invalid geo_coordinates format. Expected 'lat,lon' with numeric values.")
-            raise ValueError("Invalid geo_coordinates format. Expected 'lat,lon' with numeric values.")
 
     def _build_request_url(self) -> str:
         base_url = "https://api.openweathermap.org/data/2.5/weather"

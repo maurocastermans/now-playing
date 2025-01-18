@@ -15,7 +15,7 @@ import requests
 import signal
 from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageEnhance
 
-from service.audio_processing_service import AudioProcessingService
+from service.audio_processing_utils import AudioProcessingUtils
 from service.audio_recording_service import AudioRecordingService
 from service.music_detector import MusicDetector
 from service.shazam_service import ShazamService
@@ -23,11 +23,13 @@ from service.weather_service import WeatherService
 
 SongInfo = namedtuple('SongInfo', ['title', 'artist', 'album_art', 'offset', 'song_duration'])
 
+
 class ViewState(Enum):
     CLEAN = 0
     PLAYING = 1
     NOTHING_PLAYING = 2
     UNKNOWN = 5
+
 
 class NowPlaying:
     def __init__(self, delay=120, recording_duration=10):
@@ -42,8 +44,7 @@ class NowPlaying:
         self.logger = Logger(self.config.get('DEFAULT', 'now_playing_log')).get_logger()
 
         # setup services
-        self.audio_processing_service = AudioProcessingService()
-        self.audio_recording_service = AudioRecordingService()
+        self.audio_recording_service = AudioRecordingService(44100, 1, "USB")
         self.music_detector = MusicDetector(self.recording_duration)
         self.shazam_service = ShazamService()
 
@@ -323,7 +324,7 @@ class NowPlaying:
         Returns:
             SongInfo: with song name, album cover url, artist's name's
         """
-        wav_audio = self.audio_processing_service.to_wav(raw_audio_resampled, 16000)
+        wav_audio = AudioProcessingUtils.to_wav(raw_audio_resampled, 16000)
         song_info_dict = self.shazam_service.identify_song(wav_audio)
         if song_info_dict:
             logging.debug("found song")
@@ -348,7 +349,7 @@ class NowPlaying:
             while True:
                 try:
                     raw_audio = self.audio_recording_service.record(self.recording_duration)
-                    raw_audio_resampled = self.audio_processing_service.resample(raw_audio, 44100, 16000)
+                    raw_audio_resampled = AudioProcessingUtils.resample(raw_audio, 44100, 16000)
                     is_music_playing = self.music_detector.is_audio_music(raw_audio_resampled)
                     if is_music_playing:
                         # music is playing but check if we should re-trigger shazam

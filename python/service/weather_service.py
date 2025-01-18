@@ -2,7 +2,9 @@ import datetime
 from typing import Dict, Optional, Any
 import requests
 import logging
-from ..util import Util
+
+from python.util import Util
+
 logger = logging.getLogger("now_playing_logger")
 
 

@@ -3,7 +3,6 @@ import csv
 import logging
 import threading
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 cache_lock = threading.Lock()

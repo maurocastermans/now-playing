@@ -4,7 +4,6 @@ import numpy as np
 from scipy.signal import resample
 import scipy.io.wavfile as wav
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 

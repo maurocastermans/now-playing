@@ -23,6 +23,7 @@ from service.weather_service import WeatherService
 
 SongInfo = namedtuple('SongInfo', ['title', 'artist', 'album_art', 'offset', 'song_duration'])
 
+logger = logging.getLogger('now_playing_logger')
 
 class ViewState(Enum):
     CLEAN = 0
@@ -40,13 +41,8 @@ class NowPlaying:
         # Configuration for the matrix
         self.config = configparser.ConfigParser()
         self.config.read(os.path.join(os.path.dirname(__file__), '..', 'config', 'eink_options.ini'))
-        # set shazampi lib logger
-        logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S',
-                            filename=self.config.get('DEFAULT', 'now_playing_log'), level=logging.DEBUG)
-        logger = logging.getLogger('now_playing_logger')
-        # automatically deletes logs more than 2000 bytes
-        handler = RotatingFileHandler(self.config.get('DEFAULT', 'now_playing_log'), maxBytes=2000, backupCount=3)
-        logger.addHandler(handler)
+
+        self._init_logger()
 
         # setup services
         self.audio_processing_service = AudioProcessingService()
@@ -65,30 +61,35 @@ class NowPlaying:
         # prep some vars before entering service loop
         self.pic_counter = 0
         self.current_view = ViewState.UNKNOWN
-        self.logger = self._init_logger()
-        self.logger.info('Service instance created')
+        logger.info('Service instance created')
         if self.config.get('DEFAULT', 'model') == 'inky':
             from inky.auto import auto
             from inky.inky_uc8159 import CLEAN
             self.inky_auto = auto
             self.inky_clean = CLEAN
-            self.logger.info('Loading Pimoroni inky lib')
+            logger.info('Loading Pimoroni inky lib')
         if self.config.get('DEFAULT', 'model') == 'waveshare4':
             from lib import epd4in01f
             self.wave4 = epd4in01f
-            self.logger.info('Loading Waveshare 4" lib')
+            logger.info('Loading Waveshare 4" lib')
 
     def _init_logger(self):
-        logger = logging.getLogger(__name__)
         logger.setLevel(logging.DEBUG)
+
+        # Stream handler for console logging
         stdout_handler = logging.StreamHandler()
         stdout_handler.setLevel(logging.DEBUG)
-        stdout_handler.setFormatter(logging.Formatter('Shazampi eInk Display - %(message)s'))
+        stdout_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
         logger.addHandler(stdout_handler)
+
+        # File handler with rotation
+        handler = RotatingFileHandler(self.config.get('DEFAULT', 'now_playing_log'), maxBytes=2000, backupCount=3)
+        logger.addHandler(handler)
+
         return logger
 
     def _handle_sigterm(self, sig, frame):
-        self.logger.warning('SIGTERM received stopping')
+        logger.warning('SIGTERM received stopping')
         sys.exit(0)
 
     def _break_fix(self, text: str, width: int, font: ImageFont, draw: ImageDraw):
@@ -179,8 +180,8 @@ class NowPlaying:
                 epd.Clear()
             self.current_view = ViewState.CLEAN
         except Exception as e:
-            self.logger.error(f'Display clean error: {e}')
-            self.logger.error(traceback.format_exc())
+            logger.error(f'Display clean error: {e}')
+            logger.error(traceback.format_exc())
 
     def _convert_image_wave(self, img: Image, saturation: int = 2) -> Image:
         # blow out the saturation
@@ -223,8 +224,8 @@ class NowPlaying:
                 epd.display(epd.getbuffer(self._convert_image_wave(image)))
                 epd.sleep()
         except Exception as e:
-            self.logger.error(f'Display image error: {e}')
-            self.logger.error(traceback.format_exc())
+            logger.error(f'Display image error: {e}')
+            logger.error(traceback.format_exc())
 
     def _gen_pic(self, image: Image, artist: str, title: str) -> Image:
         """Generates the Picture for the display
@@ -355,7 +356,7 @@ class NowPlaying:
             logging.debug("couldn't identify the music")
 
     def start(self):
-        self.logger.info('Service started')
+        logger.info('Service started')
         # clean screen initially
         self._display_clean()
         prev_song_title = None
@@ -376,12 +377,12 @@ class NowPlaying:
                         #   song_info is outdated
                         if not was_music_playing or datetime.datetime.now() - last_music_detection_time >= datetime.timedelta(
                                 seconds=song_end_duration_left):
-                            self.logger.debug("music detected, identifying....")
+                            logger.debug("music detected, identifying....")
                             # music detected, identify using shazam
                             song_info = self._get_song_info(raw_audio_resampled)
 
                             if song_info:
-                                self.logger.debug("identified....")
+                                logger.debug("identified....")
                                 # update remaining time to wait for next re-identify
                                 if song_info.song_duration is None or song_info.offset is None:
                                     song_end_duration_left = self.delay
@@ -389,10 +390,10 @@ class NowPlaying:
                                     song_end_duration_left = max(self.delay,
                                                                  song_info.song_duration - song_info.offset - self.recording_duration)
                             else:
-                                self.logger.debug("couldn't identify the song")
+                                logger.debug("couldn't identify the song")
                                 song_end_duration_left = 30  # couldn't identify song so retry in 30 sec
 
-                            self.logger.debug(f"won't re-identify for {song_end_duration_left} seconds")
+                            logger.debug(f"won't re-identify for {song_end_duration_left} seconds")
 
                             if song_info and song_info.title != prev_song_title:
                                 self._display_update_process(song_info=song_info)
@@ -402,7 +403,7 @@ class NowPlaying:
                         was_music_playing = True
                     else:
                         if was_music_playing:
-                            self.logger.debug("music stopped...")
+                            logger.debug("music stopped...")
                         was_music_playing = False
 
                     if (not was_music_playing
@@ -423,10 +424,10 @@ class NowPlaying:
                         self.current_view = ViewState.NOTHING_PLAYING
 
                 except Exception as e:
-                    self.logger.error(f'Error: {e}')
-                    self.logger.error(traceback.format_exc())
+                    logger.error(f'Error: {e}')
+                    logger.error(traceback.format_exc())
         except KeyboardInterrupt:
-            self.logger.info('Service stopping')
+            logger.info('Service stopping')
             sys.exit(0)
 
 

@@ -3,7 +3,6 @@ import sounddevice as sd
 import numpy as np
 from typing import Optional, Tuple
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(name)s %(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
 
 class AudioRecordingService:

@@ -42,7 +42,7 @@ class NowPlaying:
         self.config.read(os.path.join(os.path.dirname(__file__), '..', 'config', 'eink_options.ini'))
         # set shazampi lib logger
         logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S',
-                            filename=self.config.get('DEFAULT', 'now_playing_log'), level=logging.INFO)
+                            filename=self.config.get('DEFAULT', 'now_playing_log'), level=logging.DEBUG)
         logger = logging.getLogger('now_playing_logger')
         # automatically deletes logs more than 2000 bytes
         handler = RotatingFileHandler(self.config.get('DEFAULT', 'now_playing_log'), maxBytes=2000, backupCount=3)

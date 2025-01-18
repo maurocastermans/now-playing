@@ -27,7 +27,7 @@ class WeatherService:
         base_url = "https://api.openweathermap.org/data/2.5/weather"
         return f"{base_url}?lat={self.latitude}&lon={self.longitude}&units=metric&appid={self.api_key}"
 
-    def fetch_weather_data(self) -> Optional[Dict]:
+    def _fetch_weather_data(self) -> Optional[Dict]:
         try:
             url = self._build_request_url()
             response = requests.get(url)
@@ -55,7 +55,7 @@ class WeatherService:
             return self._default_weather_response()
 
     def get_weather(self) -> Dict[str, Optional[Any]]:
-        raw_data = self.fetch_weather_data()
+        raw_data = self._fetch_weather_data()
         weather_info = self._extract_weather_info(raw_data)
         weather_info["fetched_at"] = datetime.datetime.now()
         return weather_info

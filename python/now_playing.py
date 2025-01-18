@@ -58,8 +58,7 @@ class NowPlaying:
         geo_coordinates = self.config.get('DEFAULT', 'geo_coordinates')
         units = self.config.get('DEFAULT', 'units')
         self.weather_service = WeatherService(api_key=openweathermap_api_key,
-                                              geo_coordinates=geo_coordinates,
-                                              units=units)
+                                              geo_coordinates=geo_coordinates)
 
         # prep some vars before entering service loop
         self.pic_counter = 0

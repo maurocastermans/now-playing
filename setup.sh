@@ -25,7 +25,11 @@ echo "==> Upgrading system packages to the latest versions..."
 sudo apt upgrade -y && echo "✔ System packages upgraded successfully."
 echo
 
-# Check if Python 3.9 is already installed
+# Install Python 3.9 if not already installed
+# This step is necessary because the inky pip package depends on a version of Rumba for which Python <3.11 is required
+# Although their documentation says the package is Python 3.11 supported...
+# Can take an hour or so to install
+# Can't use apt repository ppa:deadsnakes/ppa because we're on a Raspberry Pi
 echo "==> Checking if Python 3.9 is already installed..."
 if python3.9 --version &>/dev/null; then
     echo "✔ Python 3.9 is already installed."

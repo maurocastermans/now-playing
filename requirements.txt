@@ -7,3 +7,4 @@ shazamio
 librosa
 inky[rpi,example-depends]==1.5.0
 tflite-runtime
+typing

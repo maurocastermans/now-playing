@@ -15,7 +15,8 @@ import requests
 import signal
 from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageEnhance
 
-from service.audio_service import AudioService
+from service.audio_processing_service import AudioProcessingService
+from service.audio_recording_service import AudioRecordingService
 from service.music_detector import MusicDetector
 from service.shazam_service import ShazamService
 from service.weather_service import WeatherService
@@ -48,7 +49,8 @@ class NowPlaying:
         logger.addHandler(handler)
 
         # setup services
-        self.audio_service = AudioService()
+        self.audio_processing_service = AudioProcessingService()
+        self.audio_recording_service = AudioRecordingService()
         self.music_detector = MusicDetector(self.recording_duration)
         self.shazam_service = ShazamService()
 
@@ -333,13 +335,13 @@ class NowPlaying:
         self._display_image(image)
         self.pic_counter += 1
 
-    def _get_song_info(self, raw_audio) -> SongInfo:
+    def _get_song_info(self, raw_audio_resampled) -> SongInfo:
         """get the currently playing song
 
         Returns:
             SongInfo: with song name, album cover url, artist's name's
         """
-        wav_audio = self.audio_service.convert_audio_to_wav_format(raw_audio)
+        wav_audio = self.audio_processing_service.to_wav(raw_audio_resampled, 16000)
         song_info_dict = self.shazam_service.identify_song(wav_audio)
         if song_info_dict:
             logging.debug("found song")
@@ -356,15 +358,16 @@ class NowPlaying:
         # clean screen initially
         self._display_clean()
         prev_song_title = None
-        weather_info = self.weather_service.get_weather_data()
+        weather_info = self.weather_service.get_weather()
         was_music_playing = False
         last_music_detection_time = datetime.datetime.now()
         song_end_duration_left = self.delay
         try:
             while True:
                 try:
-                    raw_audio = self.audio_service.record_raw_audio(self.recording_duration)
-                    is_music_playing = self.music_detector.is_audio_music(raw_audio)
+                    raw_audio = self.audio_recording_service.record(self.recording_duration)
+                    raw_audio_resampled = self.audio_processing_service.resample(raw_audio, 44100, 16000)
+                    is_music_playing = self.music_detector.is_audio_music(raw_audio_resampled)
                     if is_music_playing:
                         # music is playing but check if we should re-trigger shazam
                         #   music was stopped in previous iteration i.e !was_music_playing
@@ -374,7 +377,7 @@ class NowPlaying:
                                 seconds=song_end_duration_left):
                             self.logger.debug("music detected, identifying....")
                             # music detected, identify using shazam
-                            song_info = self._get_song_info(raw_audio)
+                            song_info = self._get_song_info(raw_audio_resampled)
 
                             if song_info:
                                 self.logger.debug("identified....")
@@ -412,7 +415,7 @@ class NowPlaying:
 
                         # weather data outdated after 30 min, update
                         elif datetime.datetime.now() - weather_info['fetched_at'] >= datetime.timedelta(minutes=30):
-                            weather_info = self.weather_service.get_weather_data()
+                            weather_info = self.weather_service.get_weather()
                             self._display_update_process(weather_info=weather_info)
                             self.current_view = ViewState.NOTHING_PLAYING
 

@@ -1,5 +1,5 @@
 import io
-import numpyå as np
+import numpy as np
 from scipy.signal import resample
 import scipy.io.wavfile as wav
 

@@ -11,7 +11,7 @@ class Logger:
     def __new__(cls):
         if cls._instance is None:
             config = ConfigParser()
-            config.read(os.path.join(os.path.dirname(__file__), 'config', 'eink_options.ini'))
+            config.read(os.path.join(os.path.dirname(__file__), '..', 'config', 'eink_options.ini'))
             log_file_path = config.get('DEFAULT', 'now_playing_log')
             cls._instance = object.__new__(cls)
             cls._instance.logger = logging.getLogger("now_playing_logger")

@@ -15,11 +15,14 @@ import requests
 import signal
 from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageEnhance
 
+from python.service.song_identify_service import SongIdentifyService
 from service.audio_processing_utils import AudioProcessingUtils
 from service.audio_recording_service import AudioRecordingService
-from service.music_detector import MusicDetector
-from service.shazam_service import ShazamService
+from service.music_detection_service import MusicDetectionService
 from service.weather_service import WeatherService
+
+from inky.auto import auto
+from inky.inky_uc8159 import CLEAN
 
 SongInfo = namedtuple('SongInfo', ['title', 'artist', 'album_art', 'offset', 'song_duration'])
 
@@ -43,31 +46,18 @@ class NowPlaying:
 
         self.logger = Logger(self.config.get('DEFAULT', 'now_playing_log')).get_logger()
 
-        # setup services
-        self.audio_recording_service = AudioRecordingService(44100, 1, "USB")
-        self.music_detector = MusicDetector(self.recording_duration)
-        self.shazam_service = ShazamService()
-
         openweathermap_api_key = self.config.get('DEFAULT', 'openweathermap_api_key')
         geo_coordinates = self.config.get('DEFAULT', 'geo_coordinates')
-        units = self.config.get('DEFAULT', 'units')
-        self.weather_service = WeatherService(api_key=openweathermap_api_key,
-                                              geo_coordinates=geo_coordinates)
 
-        # prep some vars before entering service loop
+        self.audio_recording_service = AudioRecordingService(44100, 1, "USB")
+        self.music_detector = MusicDetectionService(self.recording_duration)
+        self.song_identify_service = SongIdentifyService()
+        self.weather_service = WeatherService(openweathermap_api_key, geo_coordinates)
+
         self.pic_counter = 0
         self.current_view = ViewState.UNKNOWN
-        self.logger.info('Service instance created')
-        if self.config.get('DEFAULT', 'model') == 'inky':
-            from inky.auto import auto
-            from inky.inky_uc8159 import CLEAN
-            self.inky_auto = auto
-            self.inky_clean = CLEAN
-            self.logger.info('Loading Pimoroni inky lib')
-        if self.config.get('DEFAULT', 'model') == 'waveshare4':
-            from lib import epd4in01f
-            self.wave4 = epd4in01f
-            self.logger.info('Loading Waveshare 4" lib')
+        self.inky_auto = auto
+        self.inky_clean = CLEAN
 
     def _handle_sigterm(self, sig, frame):
         self.logger.warning('SIGTERM received stopping')
@@ -146,46 +136,18 @@ class NowPlaying:
         """cleans the display
         """
         try:
-            if self.config.get('DEFAULT', 'model') == 'inky':
-                inky = self.inky_auto()
-                for _ in range(2):
-                    for y in range(inky.height - 1):
-                        for x in range(inky.width - 1):
-                            inky.set_pixel(x, y, self.inky_clean)
+            inky = self.inky_auto()
+            for _ in range(2):
+                for y in range(inky.height - 1):
+                    for x in range(inky.width - 1):
+                        inky.set_pixel(x, y, self.inky_clean)
 
-                    inky.show()
-                    time.sleep(1.0)
-            if self.config.get('DEFAULT', 'model') == 'waveshare4':
-                epd = self.wave4.EPD()
-                epd.init()
-                epd.Clear()
+                inky.show()
+                time.sleep(1.0)
             self.current_view = ViewState.CLEAN
         except Exception as e:
             self.logger.error(f'Display clean error: {e}')
             self.logger.error(traceback.format_exc())
-
-    def _convert_image_wave(self, img: Image, saturation: int = 2) -> Image:
-        # blow out the saturation
-        converter = ImageEnhance.Color(img)
-        img = converter.enhance(saturation)
-        # dither to 7-color palette
-        palette_data = [0x00, 0x00, 0x00,
-                        0xff, 0xff, 0xff,
-                        0x00, 0xff, 0x00,
-                        0x00, 0x00, 0xff,
-                        0xff, 0x00, 0x00,
-                        0xff, 0xff, 0x00,
-                        0xff, 0x80, 0x00]
-        # Image size doesn't matter since it's just the palette we're using
-        palette_image = Image.new('P', (1, 1))
-        # Set our 7 color palette (+ clear) and zero out the other 247 colors
-        palette_image.putpalette(palette_data + [0, 0, 0] * 248)
-        # Force source image and palette data to be loaded for `.im` to work
-        img.load()
-        palette_image.load()
-        im = img.im.convert('P', True, palette_image.im)
-        # create the new 7 color image and return it
-        return img._new(im)
 
     def _display_image(self, image: Image, saturation: float = 0.5):
         """displays a image on the inky display
@@ -195,15 +157,9 @@ class NowPlaying:
             saturation (float, optional): saturation. Defaults to 0.5.
         """
         try:
-            if self.config.get('DEFAULT', 'model') == 'inky':
-                inky = self.inky_auto()
-                inky.set_image(image, saturation=saturation)
-                inky.show()
-            if self.config.get('DEFAULT', 'model') == 'waveshare4':
-                epd = self.wave4.EPD()
-                epd.init()
-                epd.display(epd.getbuffer(self._convert_image_wave(image)))
-                epd.sleep()
+            inky = self.inky_auto()
+            inky.set_image(image, saturation=saturation)
+            inky.show()
         except Exception as e:
             self.logger.error(f'Display image error: {e}')
             self.logger.error(traceback.format_exc())
@@ -325,7 +281,7 @@ class NowPlaying:
             SongInfo: with song name, album cover url, artist's name's
         """
         wav_audio = AudioProcessingUtils.to_wav(raw_audio_resampled, 16000)
-        song_info_dict = self.shazam_service.identify_song(wav_audio)
+        song_info_dict = self.song_identify_service.identify(wav_audio)
         if song_info_dict:
             logging.debug("found song")
             return SongInfo(title=song_info_dict['title'],
@@ -337,45 +293,31 @@ class NowPlaying:
             logging.debug("couldn't identify the music")
 
     def start(self):
-        self.logger.info('Service started')
-        # clean screen initially
         self._display_clean()
         prev_song_title = None
-        weather_info = self.weather_service.get_weather()
+        weather_info = self.weather_service.get_weather_info()
         was_music_playing = False
         last_music_detection_time = datetime.datetime.now()
         song_end_duration_left = self.delay
         try:
             while True:
                 try:
-                    raw_audio = self.audio_recording_service.record(self.recording_duration)
-                    raw_audio_resampled = AudioProcessingUtils.resample(raw_audio, 44100, 16000)
-                    is_music_playing = self.music_detector.is_audio_music(raw_audio_resampled)
+                    audio = self.audio_recording_service.record(self.recording_duration)
+                    audio_resampled = AudioProcessingUtils.resample(audio, 44100, 16000)
+                    is_music_playing = self.music_detector.is_music_playing(audio_resampled)
                     if is_music_playing:
-                        # music is playing but check if we should re-trigger shazam
-                        #   music was stopped in previous iteration i.e !was_music_playing
-                        #   OR
-                        #   song_info is outdated
-                        if not was_music_playing or datetime.datetime.now() - last_music_detection_time >= datetime.timedelta(
-                                seconds=song_end_duration_left):
-                            self.logger.debug("music detected, identifying....")
-                            # music detected, identify using shazam
-                            song_info = self._get_song_info(raw_audio_resampled)
-
+                        if self.should_trigger_song_identify(last_music_detection_time, song_end_duration_left,
+                                                             was_music_playing):
+                            song_info = self._get_song_info(audio_resampled)
                             if song_info:
-                                self.logger.debug("identified....")
-                                # update remaining time to wait for next re-identify
                                 if song_info.song_duration is None or song_info.offset is None:
                                     song_end_duration_left = self.delay
                                 else:
                                     song_end_duration_left = max(self.delay,
                                                                  song_info.song_duration - song_info.offset - self.recording_duration)
                             else:
-                                self.logger.debug("couldn't identify the song")
                                 song_end_duration_left = 30  # couldn't identify song so retry in 30 sec
-
                             self.logger.debug(f"won't re-identify for {song_end_duration_left} seconds")
-
                             if song_info and song_info.title != prev_song_title:
                                 self._display_update_process(song_info=song_info)
                                 self.current_view = ViewState.PLAYING
@@ -398,7 +340,7 @@ class NowPlaying:
 
                         # weather data outdated after 30 min, update
                         elif datetime.datetime.now() - weather_info['fetched_at'] >= datetime.timedelta(minutes=30):
-                            weather_info = self.weather_service.get_weather()
+                            weather_info = self.weather_service.get_weather_info()
                             self._display_update_process(weather_info=weather_info)
                             self.current_view = ViewState.NOTHING_PLAYING
 
@@ -410,6 +352,11 @@ class NowPlaying:
         except KeyboardInterrupt:
             self.logger.info('Service stopping')
             sys.exit(0)
+
+    @staticmethod
+    def should_trigger_song_identify(last_music_detection_time, song_end_duration_left, was_music_playing):
+        return not was_music_playing or datetime.datetime.now() - last_music_detection_time >= datetime.timedelta(
+            seconds=song_end_duration_left)
 
 
 if __name__ == "__main__":

@@ -18,7 +18,7 @@ class AudioRecordingService:
             sd.default.samplerate = self.sampling_rate
             sd.default.channels = self.channels
             device_information = self._get_device_information()
-            if device_information is not None:
+            if device_information:
                 device_index, device_name = device_information
                 sd.default.device = (device_index, None)
                 logger.info(f"Using audio device: {device_name}")

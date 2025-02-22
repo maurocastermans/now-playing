@@ -1,9 +1,10 @@
 import datetime
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, Final
 import requests
 import logging
 
 import sys
+
 sys.path.append("..")
 from util import Util
 
@@ -11,16 +12,17 @@ logger = logging.getLogger("now_playing_logger")
 
 
 class WeatherService:
+    TEMPERATURE_UNIT: Final[str] = '°C'
+
     def __init__(self, api_key: str, geo_coordinates: str) -> None:
         self.api_key = api_key
         self.latitude, self.longitude = Util.parse_coordinates(geo_coordinates)
-        self.temp_display_unit = '°C'
 
     def _build_request_url(self) -> str:
         base_url = "https://api.openweathermap.org/data/2.5/weather"
         return f"{base_url}?lat={self.latitude}&lon={self.longitude}&units=metric&appid={self.api_key}"
 
-    def _fetch_weather_data(self) -> Optional[Dict]:
+    def _fetch_weather_data(self) -> Optional[Dict[str, Any]]:
         try:
             url = self._build_request_url()
             response = requests.get(url)
@@ -30,31 +32,32 @@ class WeatherService:
             logger.error(f"Error fetching weather data: {e}")
             return None
 
-    def _extract_weather_info(self, data: Optional[Dict]) -> Dict[str, Optional[Any]]:
-        if not data:
-            return self._default_weather_response()
-
+    @staticmethod
+    def _extract_weather_info(data: Dict) -> Dict[str, Any]:
         try:
-            temperature = f"{round(data['main']['temp'])}{self.temp_display_unit}"
-            feels_like_temperature = f"{round(data['main']['feels_like'])}{self.temp_display_unit}"
+            temperature = f"{round(data['main']['temp'])}{WeatherService.TEMPERATURE_UNIT}"
+            feels_like_temperature = f"{round(data['main']['feels_like'])}{WeatherService.TEMPERATURE_UNIT}"
             description = data['weather'][0]['description'].title()
             weather_sub_description = f"Feels like {feels_like_temperature}. {description}."
             return {
                 "temperature": temperature,
-                "weather_sub_description": weather_sub_description
+                "weather_sub_description": weather_sub_description,
+                "fetched_at": datetime.datetime.now()
             }
         except KeyError as e:
             logger.error(f"Error processing weather data: missing key {e}")
-            return self._default_weather_response()
+            return WeatherService._default_weather_response()
 
-    def get_weather(self) -> Dict[str, Optional[Any]]:
+    def get_weather_info(self) -> Dict[str, Any]:
         raw_data = self._fetch_weather_data()
-        weather_info = self._extract_weather_info(raw_data)
-        weather_info["fetched_at"] = datetime.datetime.now()
-        return weather_info
+        if raw_data:
+            return WeatherService._extract_weather_info(raw_data)
+        return WeatherService._default_weather_response()
 
-    def _default_weather_response(self) -> Dict[str, Optional[str]]:
+    @staticmethod
+    def _default_weather_response() -> Dict[str, Any]:
         return {
             "temperature": "inf",
             "weather_sub_description": "No weather info",
+            "fetched_at": datetime.datetime.now()
         }

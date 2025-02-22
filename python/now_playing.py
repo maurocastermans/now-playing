@@ -306,8 +306,9 @@ class NowPlaying:
                     audio_resampled = AudioProcessingUtils.resample(audio, 44100, 16000)
                     is_music_playing = self.music_detector.is_music_playing(audio_resampled)
                     if is_music_playing:
-                        if self.should_trigger_song_identify(last_music_detection_time, song_end_duration_left,
-                                                             was_music_playing):
+                        if not was_music_playing or datetime.datetime.now() - last_music_detection_time >= datetime.timedelta(
+                                seconds=song_end_duration_left):
+                            self.logger.debug("music detected, identifying....")
                             song_info = self._get_song_info(audio_resampled)
                             if song_info:
                                 if song_info.song_duration is None or song_info.offset is None:

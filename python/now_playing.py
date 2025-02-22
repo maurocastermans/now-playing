@@ -15,7 +15,7 @@ import requests
 import signal
 from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageEnhance
 
-from python.service.song_identify_service import SongIdentifyService
+from service.song_identify_service import SongIdentifyService
 from service.audio_processing_utils import AudioProcessingUtils
 from service.audio_recording_service import AudioRecordingService
 from service.music_detection_service import MusicDetectionService

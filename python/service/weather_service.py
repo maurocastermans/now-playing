@@ -1,8 +1,8 @@
 import datetime
 from typing import Dict, Optional, Any, Final
 import requests
-from python.logger import Logger
-from python.util import Util
+from ..logger import Logger
+from ..util import Util
 
 
 class WeatherService:

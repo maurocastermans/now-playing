@@ -3,7 +3,7 @@ from typing import Optional, Dict, Any
 import requests
 import io
 from shazamio import Shazam
-from python.logger import Logger
+from ..logger import Logger
 
 class SongIdentifyService:
     def __init__(self) -> None:

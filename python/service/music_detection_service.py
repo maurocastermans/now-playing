@@ -2,7 +2,7 @@ import csv
 import numpy as np
 from tflite_runtime.interpreter import Interpreter
 from typing import List, Tuple
-from python.logger import Logger
+from ..logger import Logger
 
 
 class MusicDetectionService:

@@ -1,8 +1,11 @@
 import datetime
 from typing import Dict, Optional, Any, Final
 import requests
-from ..logger import Logger
-from ..util import Util
+
+import sys
+sys.path.append("..")
+from logger import Logger
+from util import Util
 
 
 class WeatherService:

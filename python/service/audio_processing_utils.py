@@ -2,7 +2,10 @@ import io
 import numpyå as np
 from scipy.signal import resample
 import scipy.io.wavfile as wav
-from ..logger import Logger
+
+import sys
+sys.path.append("..")
+from logger import Logger
 
 class AudioProcessingUtils:
     logger = Logger().get_logger()

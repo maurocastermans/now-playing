@@ -21,8 +21,6 @@ class MusicDetectionService:
         self.class_names = self._load_class_names()
 
     def _configure_interpreter(self) -> None:
-        self.interpreter.allocate_tensors()
-
         self.input_details = self.interpreter.get_input_details()
         self.output_details = self.interpreter.get_output_details()
 
@@ -32,6 +30,8 @@ class MusicDetectionService:
         # Resize input tensor to match the expected duration
         input_shape = [self.recording_duration * self.sampling_rate]
         self.interpreter.resize_tensor_input(self.waveform_input_index, input_shape, strict=True)
+
+        self.interpreter.allocate_tensors()
 
     def _load_class_names(self) -> List[str]:
         try:

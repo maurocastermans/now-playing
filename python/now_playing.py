@@ -3,7 +3,6 @@ from __future__ import annotations
 import datetime
 import time
 import sys
-import logging
 from collections import namedtuple
 from enum import Enum
 from logger import Logger
@@ -283,14 +282,14 @@ class NowPlaying:
         wav_audio = AudioProcessingUtils.to_wav(raw_audio_resampled, 16000)
         song_info_dict = self.song_identify_service.identify(wav_audio)
         if song_info_dict:
-            logging.debug("found song")
+            self.logger.debug("found song")
             return SongInfo(title=song_info_dict['title'],
                             artist=song_info_dict['artist'],
                             album_art=song_info_dict['album_art'],
                             song_duration=song_info_dict['song_duration'],
                             offset=song_info_dict['offset'])
         else:
-            logging.debug("couldn't identify the music")
+            self.logger.debug("couldn't identify the music")
 
     def start(self):
         self._display_clean()

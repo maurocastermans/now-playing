@@ -4,12 +4,11 @@ from typing import Optional, Dict, Any
 import requests
 import io
 from shazamio import Shazam
-
-logger = logging.getLogger("music_identify_service")
-
+from ..logger import Logger
 
 class SongIdentifyService:
     def __init__(self) -> None:
+        self.logger = Logger().get_logger()
         self.shazam = Shazam()
 
     def identify(self, audio_wav_buffer: io.BytesIO) -> Optional[Dict[str, Any]]:

@@ -44,7 +44,7 @@ class NowPlaying:
         self.config = configparser.ConfigParser()
         self.config.read(os.path.join(os.path.dirname(__file__), '..', 'config', 'eink_options.ini'))
 
-        self.logger = Logger(self.config.get('DEFAULT', 'now_playing_log')).get_logger()
+        self.logger = Logger().get_logger()
 
         openweathermap_api_key = self.config.get('DEFAULT', 'openweathermap_api_key')
         geo_coordinates = self.config.get('DEFAULT', 'geo_coordinates')

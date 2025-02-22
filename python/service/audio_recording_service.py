@@ -1,13 +1,11 @@
-import logging
 import sounddevice as sd
 import numpy as np
 from typing import Optional, Tuple
-
-logger = logging.getLogger("now_playing_logger")
-
+from ..logger import Logger
 
 class AudioRecordingService:
     def __init__(self, sampling_rate: int, channels: int, device_substring: str = 'USB') -> None:
+        self.logger = Logger().get_logger()
         self.device_substring = device_substring
         self.sampling_rate = sampling_rate
         self.channels = channels
@@ -21,12 +19,12 @@ class AudioRecordingService:
             if device_information:
                 device_index, device_name = device_information
                 sd.default.device = (device_index, None)
-                logger.info(f"Using audio device: {device_name}")
+                self.logger.info(f"Using audio device: {device_name}")
             else:
-                logger.warning(
+                self.logger.warning(
                     f"No audio device found matching '{self.device_substring}'. Defaulting to system device.")
         except Exception as e:
-            logger.error(f"Audio device setup failed: {e}")
+            self.logger.error(f"Audio device setup failed: {e}")
             raise RuntimeError("Audio device setup failed.") from e
 
     def _get_device_information(self) -> Optional[Tuple[int, str]]:
@@ -37,7 +35,7 @@ class AudioRecordingService:
                     return idx, device['name']
             return None
         except Exception as e:
-            logger.error(f"Device query failed: {e}")
+            self.logger.error(f"Device query failed: {e}")
             return None
 
     def record(self, duration: float) -> np.ndarray:
@@ -45,11 +43,11 @@ class AudioRecordingService:
             raise ValueError("Duration must be positive.")
 
         try:
-            logger.info(f"Recording for {duration} seconds at {self.sampling_rate} Hz.")
+            self.logger.info(f"Recording for {duration} seconds at {self.sampling_rate} Hz.")
             audio = sd.rec(int(duration * self.sampling_rate), dtype=np.float32)
             sd.wait()
-            logger.info("Recording finished.")
+            self.logger.info("Recording finished.")
             return np.squeeze(audio)
         except Exception as e:
-            logger.error(f"Recording failed: {e}")
+            self.logger.error(f"Recording failed: {e}")
             raise RuntimeError("Recording failed.") from e

@@ -1,15 +1,14 @@
 import csv
-import logging
 import numpy as np
 from tflite_runtime.interpreter import Interpreter
 from typing import List, Tuple
-
-logger = logging.getLogger("now_playing_logger")
+from ..logger import Logger
 
 
 class MusicDetectionService:
     def __init__(self, recording_duration: int, model_path: str = 'python/ml-model/1.tflite',
                  class_map_path: str = 'python/ml-model/yamnet_class_map.csv') -> None:
+        self.logger = Logger().get_logger()
         self.recording_duration = recording_duration
         self.sampling_rate = 16000
         self.model_path = model_path
@@ -40,7 +39,7 @@ class MusicDetectionService:
                 next(class_map_csv)  # Skip header row
                 return [row[2] for row in class_map_csv]  # Only display_name column
         except FileNotFoundError:
-            logger.error(f"Class map file not found at {self.class_map_path}")
+            self.logger.error(f"Class map file not found at {self.class_map_path}")
             return []
 
     def _get_top_class(self, scores: np.ndarray) -> Tuple[str, float]:
@@ -50,7 +49,7 @@ class MusicDetectionService:
 
     def is_music_playing(self, waveform: np.ndarray) -> bool:
         if not self.class_names:
-            logger.error("Class names are not loaded. Cannot perform detection.")
+            self.logger.error("Class names are not loaded. Cannot perform detection.")
             return False
 
         self.interpreter.set_tensor(self.waveform_input_index, waveform)

@@ -1,20 +1,18 @@
 import datetime
 from typing import Dict, Optional, Any, Final
 import requests
-import logging
+from ..logger import Logger
 
 import sys
 
 sys.path.append("..")
 from util import Util
 
-logger = logging.getLogger("now_playing_logger")
-
-
 class WeatherService:
     TEMPERATURE_UNIT: Final[str] = '°C'
 
     def __init__(self, api_key: str, geo_coordinates: str) -> None:
+        self.logger = Logger().get_logger()
         self.api_key = api_key
         self.latitude, self.longitude = Util.parse_coordinates(geo_coordinates)
 

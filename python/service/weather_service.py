@@ -27,11 +27,10 @@ class WeatherService:
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            logger.error(f"Error fetching weather data: {e}")
+            self.logger.error(f"Error fetching weather data: {e}")
             return None
 
-    @staticmethod
-    def _extract_weather_info(data: Dict) -> Dict[str, Any]:
+    def _extract_weather_info(self, data: Dict) -> Dict[str, Any]:
         try:
             temperature = f"{round(data['main']['temp'])}{WeatherService.TEMPERATURE_UNIT}"
             feels_like_temperature = f"{round(data['main']['feels_like'])}{WeatherService.TEMPERATURE_UNIT}"
@@ -43,13 +42,13 @@ class WeatherService:
                 "fetched_at": datetime.datetime.now()
             }
         except KeyError as e:
-            logger.error(f"Error processing weather data: missing key {e}")
+            self.logger.error(f"Error processing weather data: missing key {e}")
             return WeatherService._default_weather_response()
 
     def get_weather_info(self) -> Dict[str, Any]:
         raw_data = self._fetch_weather_data()
         if raw_data:
-            return WeatherService._extract_weather_info(raw_data)
+            return self._extract_weather_info(raw_data)
         return WeatherService._default_weather_response()
 
     @staticmethod

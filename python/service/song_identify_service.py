@@ -17,15 +17,14 @@ class SongIdentifyService:
         try:
             result = asyncio.run(self.shazam.recognize(audio_wav_buffer.read()))
             if not result or "track" not in result:
-                logger.info("No song identified in the provided audio buffer.")
+                self.logger.info("No song identified in the provided audio buffer.")
                 return None
             return self._parse_result(result)
         except Exception as ex:
-            logger.error(f"Error identifying song: {ex}")
+            self.logger.error(f"Error identifying song: {ex}")
             return None
 
-    @staticmethod
-    def _parse_result(result: Optional[Dict]) -> Optional[Dict[str, Any]]:
+    def _parse_result(self, result: Optional[Dict]) -> Optional[Dict[str, Any]]:
         track = result["track"]
         return {
             "title": track.get("title", "Unknown"),
@@ -33,7 +32,7 @@ class SongIdentifyService:
             "album": SongIdentifyService._extract_album_name(track),
             "album_art": track.get("images", {}).get("coverart", "Unknown"),
             "offset": SongIdentifyService._extract_offset(result),
-            "song_duration": SongIdentifyService._fetch_duration(track.get("isrc", "Unknown")),
+            "song_duration": self._fetch_duration(track.get("isrc", "Unknown")),
         }
 
     @staticmethod
@@ -49,22 +48,21 @@ class SongIdentifyService:
         matches = result.get("matches", [{}])
         return matches[0].get("offset", "Unknown") if matches else "Unknown"
 
-    @staticmethod
-    def _fetch_duration(isrc: str) -> Optional[float]:
+
+    def _fetch_duration(self, isrc: str) -> Optional[float]:
         url = f"https://musicbrainz.org/ws/2/recording/?query=isrc:{isrc}&fmt=json"
         try:
             response = requests.get(url)
             response.raise_for_status()
-            return SongIdentifyService._parse_duration(response.json())
+            return self._parse_duration(response.json())
         except requests.exceptions.RequestException as ex:
-            logger.error(f"Error fetching song duration from MusicBrainz: {ex}")
+            self.logger.error(f"Error fetching song duration from MusicBrainz: {ex}")
             return None
 
-    @staticmethod
-    def _parse_duration(data: Dict) -> Optional[float]:
+    def _parse_duration(self, data: Dict) -> Optional[float]:
         recordings = data.get("recordings", [])
         if not recordings:
-            logger.info("No recordings found in MusicBrainz response.")
+            self.logger.info("No recordings found in MusicBrainz response.")
             return None
 
         duration_ms = recordings[0].get("length")

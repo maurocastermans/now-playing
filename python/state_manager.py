@@ -93,6 +93,6 @@ class StateManager:
         return None
 
     def get_screensaver_state(self) -> Optional[ScreensaverState]:
-        if self.state.current == DisplayState.SCREENSAVER and isinstance(self.state.data, ScreensaverState)
+        if self.state.current == DisplayState.SCREENSAVER and isinstance(self.state.data, ScreensaverState):
             return self.state.data
         return None

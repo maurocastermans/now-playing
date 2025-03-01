@@ -297,21 +297,19 @@ class NowPlaying:
         last_displayed_song = None
         weather_info = self.weather_service.get_weather_info()
         last_was_playing_music_time = datetime.datetime.now()
-        was_playing_music = False
         try:
             while True:
                 try:
                     is_music_playing, audio_resampled = self._detect_music()
                     if is_music_playing:
                         remaining_song_duration, last_displayed_song, last_was_playing_music_time = self._handle_music_playing(
-                            audio_resampled, last_was_playing_music_time, remaining_song_duration, last_displayed_song,
-                            was_playing_music
+                            audio_resampled, last_was_playing_music_time, remaining_song_duration, last_displayed_song
                         )
-                        was_playing_music = True
+                        self.current_view = ViewState.PLAYING
                     else:
                         weather_info = self.update_weather_info_if_outdated(weather_info)
-                        self._handle_no_music(weather_info, last_was_playing_music_time, was_playing_music)
-                        was_playing_music = False
+                        self._handle_no_music(weather_info, last_was_playing_music_time)
+                        self.current_view = ViewState.NOTHING_PLAYING
                 except Exception as e:
                     self.logger.error(f'Error: {e}')
                     self.logger.error(traceback.format_exc())
@@ -331,18 +329,18 @@ class NowPlaying:
         return is_music_playing, audio_resampled
 
     def _handle_music_playing(self, audio_resampled, last_was_playing_music_time, remaining_song_duration,
-                              last_displayed_song,
-                              was_playing_music):
-        if not was_playing_music or datetime.datetime.now() - last_was_playing_music_time >= datetime.timedelta(
+                              last_displayed_song):
+        if self.current_view != ViewState.PLAYING or datetime.datetime.now() - last_was_playing_music_time >= datetime.timedelta(
                 seconds=remaining_song_duration):
             song_info = self._trigger_song_identify(audio_resampled)
             remaining_song_duration = self._calculate_remaining_song_duration(song_info)
+            self.logger.info(f"Not triggering song identify for {remaining_song_duration} seconds")
 
             if song_info and song_info.title != last_displayed_song:
                 self._display_update_process(song_info=song_info)
-                self.current_view = ViewState.PLAYING
                 last_displayed_song = song_info.title
 
+            self.current_view = ViewState.PLAYING
             last_was_playing_music_time = datetime.datetime.now()
         return remaining_song_duration, last_displayed_song, last_was_playing_music_time
 
@@ -351,12 +349,9 @@ class NowPlaying:
             return max(self.delay, song_info.song_duration - song_info.offset - self.recording_duration)
         return 30  # Default retry interval if song identification fails
 
-    def _handle_no_music(self, weather_info, last_was_playing_music_time, was_music_playing):
-        if not was_music_playing and datetime.datetime.now() - last_was_playing_music_time >= datetime.timedelta(
-                minutes=1):
-            if self.current_view != ViewState.NOTHING_PLAYING:
-                self._display_update_process(weather_info=weather_info)
-                self.current_view = ViewState.NOTHING_PLAYING
+    def _handle_no_music(self, weather_info, last_was_playing_music_time):
+        if self.current_view != ViewState.NOTHING_PLAYING and datetime.datetime.now() - last_was_playing_music_time >= datetime.timedelta(minutes=1):
+            self._display_update_process(weather_info=weather_info)
 
 
 if __name__ == "__main__":

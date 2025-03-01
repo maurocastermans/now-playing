@@ -352,12 +352,13 @@ class NowPlaying:
             return max(self.delay, song_info.song_duration - song_info.offset - self.recording_duration)
         return 30  # Default retry interval if song identification fails
 
-    def _handle_no_music_playing(self, weather_info):
+    def _handle_no_music_playing(self):
         self._update_weather_info_if_outdated()
         if self.current_view != ViewState.NOTHING_PLAYING and datetime.datetime.now() - self.state[ViewState.PLAYING][
             "song_indentify_time"] >= datetime.timedelta(
                 minutes=1):
-            self._display_update_process(weather_info=weather_info)
+            self._display_update_process(weather_info=self.state[ViewState.PLAYING][
+                "weather_info"])
             self.current_view = ViewState.NOTHING_PLAYING
 
 

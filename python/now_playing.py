@@ -357,7 +357,7 @@ class NowPlaying:
         if self.current_view != ViewState.NOTHING_PLAYING and datetime.datetime.now() - self.state[ViewState.PLAYING][
             "song_identified_time"] >= datetime.timedelta(
                 minutes=1):
-            self._display_update_process(weather_info=self.state[ViewState.PLAYING][
+            self._display_update_process(weather_info=self.state[ViewState.NOTHING_PLAYING][
                 "weather_info"])
             self.current_view = ViewState.NOTHING_PLAYING
 

@@ -309,7 +309,6 @@ class NowPlaying:
                     else:
                         weather_info = self.update_weather_info_if_outdated(weather_info)
                         self._handle_no_music(weather_info, last_was_playing_music_time)
-                        self.current_view = ViewState.NOTHING_PLAYING
                 except Exception as e:
                     self.logger.error(f'Error: {e}')
                     self.logger.error(traceback.format_exc())
@@ -355,6 +354,7 @@ class NowPlaying:
         self.logger.info(f"boolean: {datetime.datetime.now() - last_was_playing_music_time >= datetime.timedelta(minutes=1)}")
         if self.current_view != ViewState.NOTHING_PLAYING and datetime.datetime.now() - last_was_playing_music_time >= datetime.timedelta(minutes=1):
             self._display_update_process(weather_info=weather_info)
+            self.current_view = ViewState.NOTHING_PLAYING
 
 
 if __name__ == "__main__":

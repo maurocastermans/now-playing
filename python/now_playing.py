@@ -335,6 +335,7 @@ class NowPlaying:
 
     def _update_weather_info_if_needed(self):
         if self.state_manager.weather_info_outdated():
+            self.logger.info("Weather info outdated, fetching again.")
             updated_weather_info = self.weather_service.get_weather_info()
             self._display_update_process(weather_info=updated_weather_info)
             self.state_manager.set_screensaver_state(weather_info=updated_weather_info)

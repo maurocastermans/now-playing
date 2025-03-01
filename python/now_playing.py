@@ -48,6 +48,7 @@ class NowPlaying:
 
         self.pic_counter = 0
         self.state_manager = StateManager()
+        self.state_manager.set_weather_state(self.weather_service.get_weather_info())
         self.inky_auto = auto
         self.inky_clean = CLEAN
         self._display_clean()
@@ -325,7 +326,7 @@ class NowPlaying:
         if self.state_manager.should_refresh_weather():
             self.state_manager.set_weather_state(self.weather_service.get_weather_info())
 
-        if self.state_manager.no_song_identify_triggered_for_1_minute():
+        if self.state_manager.get_state().current != DisplayState.SCREENSAVER and self.state_manager.no_song_identify_triggered_for_more_than_a_minute():
             self._display_update_process(weather_info=self.state_manager.get_screensaver_state().weather_info)
             self.state_manager.set_screensaver_state()
 

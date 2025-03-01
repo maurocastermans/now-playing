@@ -64,8 +64,8 @@ class StateManager:
         return self.get_state() == DisplayState.PLAYING and datetime.datetime.now() - self.state.playing.song_identified_time >= datetime.timedelta(
             seconds=self.state.playing.song_remaining_duration)
 
-    def no_song_identify_triggered_for_1_minute(self) -> bool:
-        return self.state.current != DisplayState.SCREENSAVER and datetime.datetime.now() - self.state.last_state_change >= datetime.timedelta(
+    def no_song_identify_triggered_for_more_than_a_minute(self) -> bool:
+        return datetime.datetime.now() - self.state.last_state_change >= datetime.timedelta(
             minutes=1)
 
     def get_state(self):

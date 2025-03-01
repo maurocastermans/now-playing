@@ -12,6 +12,7 @@ import configparser
 
 import requests
 import signal
+from dataclasses import dataclass, field
 from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageEnhance
 
 from service.song_identify_service import SongIdentifyService
@@ -22,15 +23,35 @@ from service.weather_service import WeatherService
 
 from inky.auto import auto
 from inky.inky_uc8159 import CLEAN
+from typing import Optional
 
 SongInfo = namedtuple('SongInfo', ['title', 'artist', 'album_art', 'offset', 'song_duration'])
 
 
-class ViewState(Enum):
+class DisplayState(Enum):
     CLEAN = 0
     PLAYING = 1
-    NOTHING_PLAYING = 2
+    SCREENSAVER = 2
     UNKNOWN = 5
+
+
+@dataclass
+class PlayingState:
+    song_remaining_duration: int
+    song_title: Optional[str]
+    song_identified_time: datetime.datetime
+
+
+@dataclass
+class ScreensaverState:
+    weather_info: dict
+
+
+@dataclass
+class AppState:
+    current_state: DisplayState = DisplayState.UNKNOWN
+    playing_state: Optional[PlayingState] = None
+    screensaver_state: Optional[ScreensaverState] = None
 
 
 class NowPlaying:
@@ -54,8 +75,7 @@ class NowPlaying:
         self.weather_service = WeatherService(openweathermap_api_key, geo_coordinates)
 
         self.pic_counter = 0
-        self.current_view = ViewState.UNKNOWN
-        self.state = {}
+        self.state = AppState()
         self.inky_auto = auto
         self.inky_clean = CLEAN
 
@@ -144,7 +164,7 @@ class NowPlaying:
 
                 inky.show()
                 time.sleep(1.0)
-            self.current_view = ViewState.CLEAN
+            self.state.current_state = DisplayState.CLEAN
         except Exception as e:
             self.logger.error(f'Display clean error: {e}')
             self.logger.error(traceback.format_exc())
@@ -294,16 +314,9 @@ class NowPlaying:
 
     def start(self) -> None:
         self._display_clean()
-        self.state = {
-            ViewState.PLAYING: {
-                "song_remaining_duration": self.delay,
-                "song_title": None,
-                "song_identified_time": datetime.datetime.now()
-            },
-            ViewState.NOTHING_PLAYING: {
-                "weather_info": self.weather_service.get_weather_info()
-            }
-        }
+        self.state.playing_state = PlayingState(song_remaining_duration=self.delay, song_title=None,
+                                                song_identified_time=datetime.datetime.now())
+        self.state.screensaver_state = ScreensaverState(self.weather_service.get_weather_info())
         try:
             while True:
                 try:
@@ -320,9 +333,9 @@ class NowPlaying:
             sys.exit(0)
 
     def _update_weather_info_if_outdated(self):
-        if datetime.datetime.now() - self.state[ViewState.NOTHING_PLAYING]["weather_info"][
-            'fetched_at'] >= datetime.timedelta(minutes=30):
-            self.state[ViewState.NOTHING_PLAYING]["weather_info"] = self.weather_service.get_weather_info()
+        if datetime.datetime.now() - self.state.screensaver_state.weather_info["fetched_at"] >= datetime.timedelta(
+                minutes=30):
+            self.state.screensaver_state.weather_info = self.weather_service.get_weather_info()
 
     def _record_audio_and_detect_music(self):
         audio = AudioProcessingUtils.resample(
@@ -334,18 +347,16 @@ class NowPlaying:
         return audio, is_music_playing
 
     def _handle_music_playing(self, audio):
-        if self.current_view != ViewState.PLAYING or datetime.datetime.now() - self.state[ViewState.PLAYING][
-            "song_identified_time"] >= datetime.timedelta(
-                seconds=self.state[ViewState.PLAYING]["song_remaining_duration"]):
+        if self.state.current_state != DisplayState.PLAYING or datetime.datetime.now() - self.state.playing_state.song_identified_time >= datetime.timedelta(
+                seconds=self.state.playing_state.song_remaining_duration):
             song_info = self._trigger_song_identify(audio)
-            self.state[ViewState.PLAYING]["song_identified_time"] = datetime.datetime.now()
-            self.state[ViewState.PLAYING]["song_remaining_duration"] = self._calculate_remaining_song_duration(
-                song_info)
+            self.state.playing_state.song_identified_time = datetime.datetime.now()
+            self.state.playing_state.song_remaining_duration = self._calculate_remaining_song_duration(song_info)
 
-            if song_info and song_info.title != self.state[ViewState.PLAYING]["song_title"]:
+            if song_info and song_info.title != self.state.playing_state.song_title:
                 self._display_update_process(song_info=song_info)
-                self.state[ViewState.PLAYING]["song_title"] = song_info.title
-            self.current_view = ViewState.PLAYING
+                self.state.playing_state.song_title = song_info.title
+            self.current_view = DisplayState.PLAYING
 
     def _calculate_remaining_song_duration(self, song_info):
         if song_info and song_info.song_duration and song_info.offset:
@@ -354,12 +365,10 @@ class NowPlaying:
 
     def _handle_no_music_playing(self):
         self._update_weather_info_if_outdated()
-        if self.current_view != ViewState.NOTHING_PLAYING and datetime.datetime.now() - self.state[ViewState.PLAYING][
-            "song_identified_time"] >= datetime.timedelta(
+        if self.current_view != DisplayState.SCREENSAVER and datetime.datetime.now() - self.state.playing_state.song_identified_time >= datetime.timedelta(
                 minutes=1):
-            self._display_update_process(weather_info=self.state[ViewState.NOTHING_PLAYING][
-                "weather_info"])
-            self.current_view = ViewState.NOTHING_PLAYING
+            self._display_update_process(weather_info=self.state.screensaver_state.weather_info)
+            self.current_view = DisplayState.SCREENSAVER
 
 
 if __name__ == "__main__":

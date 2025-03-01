@@ -311,32 +311,37 @@ class NowPlaying:
         return audio, is_music_playing
 
     def _handle_music_playing(self, audio):
-        if self.state_manager.get_state().current != DisplayState.PLAYING or self.state_manager.music_still_playing_but_song_ended():
-            song_info = self._trigger_song_identify(audio)
-            if song_info and song_info.title != self.state_manager.get_playing_state().song_title:
-                self._display_update_process(song_info=song_info)
-
-            self.state_manager.set_playing_state(
-                song_title=song_info.title,
-                song_remaining_duration=self._calculate_remaining_song_duration(song_info),
-            )
-
-    def _handle_no_music_playing(self):
+        song_info = self._trigger_song_identify(audio)
         if (
-                self.state_manager.get_state().current != DisplayState.SCREENSAVER and self.state_manager.no_song_identify_triggered_for_more_than_a_minute()
-                or self.state_manager.get_state().current == DisplayState.SCREENSAVER and self.state_manager.weather_info_outdated()
+                self.state_manager.get_state().current != DisplayState.PLAYING
+                or (self.state_manager.music_still_playing_but_song_ended() and song_info
+                    and song_info.title != self.state_manager.get_playing_state().song_title)
         ):
-            self._update_weather_info_and_display()
+            self._set_playing_state_and_update_display(song_info)
 
-    def _update_weather_info_and_display(self):
-        weather_info = self.weather_service.get_weather_info()
-        self._display_update_process(weather_info=weather_info)
-        self.state_manager.set_screensaver_state(weather_info=weather_info)
+    def _set_playing_state_and_update_display(self, song_info):
+        self.state_manager.set_playing_state(
+            song_title=song_info.title,
+            song_remaining_duration=self._calculate_remaining_song_duration(song_info),
+        )
+        self._display_update_process(song_info=song_info)
 
     def _calculate_remaining_song_duration(self, song_info):
         if song_info and song_info.song_duration and song_info.offset:
             return song_info.song_duration - song_info.offset - self.recording_duration
         return 30  # Default retry interval if song identification fails
+
+    def _handle_no_music_playing(self):
+        weather_info = self.weather_service.get_weather_info()
+        if (
+                self.state_manager.get_state().current != DisplayState.SCREENSAVER and self.state_manager.no_song_identify_triggered_for_more_than_a_minute()
+                or self.state_manager.weather_info_outdated()
+        ):
+            self._set_screensaver_state_and_update_display(weather_info)
+
+    def _set_screensaver_state_and_update_display(self, weather_info):
+        self.state_manager.set_screensaver_state(weather_info=weather_info)
+        self._display_update_process(weather_info=weather_info)
 
 
 if __name__ == "__main__":

@@ -19,34 +19,35 @@ class SongIdentifyService:
             if not result or "track" not in result:
                 self.logger.info("No song identified in the provided audio buffer.")
                 return None
+            self.logger.info("Song identified in the provided audio buffer.")
             return self._parse_result(result)
         except Exception as ex:
             self.logger.error(f"Error identifying song: {ex}")
             return None
 
-    def _parse_result(self, result: Optional[Dict]) -> Optional[Dict[str, Any]]:
+    def _parse_result(self, result: Optional[Dict]) -> Dict[str, Any]:
         track = result["track"]
         return {
-            "title": track.get("title", "Unknown"),
-            "artist": track.get("subtitle", "Unknown"),
+            "title": track.get("title", None),
+            "artist": track.get("subtitle", None),
             "album": SongIdentifyService._extract_album_name(track),
-            "album_art": track.get("images", {}).get("coverart", "Unknown"),
+            "album_art": track.get("images", {}).get("coverart", None),
             "offset": SongIdentifyService._extract_offset(result),
-            "song_duration": self._fetch_duration(track.get("isrc", "Unknown")),
+            "song_duration": self._fetch_duration(track.get("isrc", None)),
         }
 
     @staticmethod
-    def _extract_album_name(track: Dict) -> str:
+    def _extract_album_name(track: Dict) -> Optional[str]:
         metadata = track.get("sections", [{}])[0].get("metadata", [])
         for item in metadata:
             if item.get("title") == "Album":
-                return item.get("text", "Unknown")
-        return "Unknown"
+                return item.get("text", None)
+        return None
 
     @staticmethod
-    def _extract_offset(result: Dict) -> str:
+    def _extract_offset(result: Dict) -> Optional[str]:
         matches = result.get("matches", [{}])
-        return matches[0].get("offset", "Unknown") if matches else "Unknown"
+        return matches[0].get("offset", None) if matches else None
 
 
     def _fetch_duration(self, isrc: str) -> Optional[float]:

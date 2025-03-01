@@ -8,7 +8,7 @@ sys.path.append("..")
 from logger import Logger
 
 class AudioProcessingUtils:
-    logger = Logger().get_logger()
+    logger: logging.Logger = Logger().get_logger()
 
     @staticmethod
     def resample(audio: np.ndarray, source_sampling_rate: int, target_sampling_rate: int) -> np.ndarray:

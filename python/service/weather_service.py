@@ -47,9 +47,9 @@ class WeatherService:
 
     def get_weather_info(self) -> Dict[str, Any]:
         raw_data = self._fetch_weather_data()
-        if raw_data:
-            return self._extract_weather_info(raw_data)
-        return WeatherService._default_weather_response()
+        if not raw_data:
+            return WeatherService._default_weather_response()
+        return self._extract_weather_info(raw_data)
 
     @staticmethod
     def _default_weather_response() -> Dict[str, Any]:

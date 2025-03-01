@@ -356,7 +356,7 @@ class NowPlaying:
             if song_info and song_info.title != self.state.playing_state.song_title:
                 self._display_update_process(song_info=song_info)
                 self.state.playing_state.song_title = song_info.title
-            self.current_view = DisplayState.PLAYING
+            self.state.current_state = DisplayState.PLAYING
 
     def _calculate_remaining_song_duration(self, song_info):
         if song_info and song_info.song_duration and song_info.offset:
@@ -365,10 +365,10 @@ class NowPlaying:
 
     def _handle_no_music_playing(self):
         self._update_weather_info_if_outdated()
-        if self.current_view != DisplayState.SCREENSAVER and datetime.datetime.now() - self.state.playing_state.song_identified_time >= datetime.timedelta(
+        if self.state.current_state != DisplayState.SCREENSAVER and datetime.datetime.now() - self.state.playing_state.song_identified_time >= datetime.timedelta(
                 minutes=1):
             self._display_update_process(weather_info=self.state.screensaver_state.weather_info)
-            self.current_view = DisplayState.SCREENSAVER
+            self.state.current_state = DisplayState.SCREENSAVER
 
 
 if __name__ == "__main__":

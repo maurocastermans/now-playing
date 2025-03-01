@@ -73,6 +73,7 @@ class StateManager:
     def weather_info_outdated(self) -> bool:
         if isinstance(self.state.state_data, ScreensaverState):
             last_fetched = self.state.state_data.weather_info["fetched_at"]
+            self.logger.info(f"last_fetched: {last_fetched}")
             return datetime.datetime.now() - last_fetched >= datetime.timedelta(minutes=1)
         return False
 

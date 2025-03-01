@@ -51,7 +51,7 @@ class StateManager:
         self.set_state(DisplayState.PLAYING)
 
     def set_screensaver_state(self):
-        self.set_state(DisplayState.PLAYING)
+        self.set_state(DisplayState.SCREENSAVER)
 
     def set_weather_state(self, weather_info: dict):
         self.state.screensaver.weather_info = weather_info

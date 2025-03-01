@@ -48,7 +48,6 @@ class NowPlaying:
 
         self.pic_counter = 0
         self.state_manager = StateManager()
-        self.state_manager.set_unknown_state()
         self.inky_auto = auto
         self.inky_clean = CLEAN
         self._display_clean()

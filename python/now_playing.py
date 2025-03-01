@@ -322,10 +322,10 @@ class NowPlaying:
             )
 
     def _handle_no_music_playing(self):
-        if self.state_manager.get_state().current == DisplayState.SCREENSAVER and self.state_manager.weather_info_outdated():
-            self.logger.info("Weather info outdated. Fetching again.")
-            self._update_weather_info_and_display()
-        elif self.state_manager.get_state().current != DisplayState.SCREENSAVER and self.state_manager.no_song_identify_triggered_for_more_than_a_minute():
+        if (
+                self.state_manager.get_state().current != DisplayState.SCREENSAVER and self.state_manager.no_song_identify_triggered_for_more_than_a_minute()
+                or self.state_manager.get_state().current == DisplayState.SCREENSAVER and self.state_manager.weather_info_outdated()
+        ):
             self._update_weather_info_and_display()
 
     def _update_weather_info_and_display(self):

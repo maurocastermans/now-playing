@@ -1,7 +1,7 @@
 import datetime
 from enum import Enum
 from typing import Optional
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from logger import Logger
 
@@ -13,66 +13,87 @@ class DisplayState(Enum):
     UNKNOWN = 5
 
 
-@dataclass
-class PlayingState:
+class StateData:
+    pass
+
+
+@dataclass(frozen=True)
+class PlayingState(StateData):
     song_remaining_duration: Optional[int] = None
     song_title: Optional[str] = None
     song_identified_time: Optional[datetime.datetime] = None
 
 
-@dataclass
-class ScreensaverState:
+@dataclass(frozen=True)
+class ScreensaverState(StateData):
     weather_info: Optional[dict] = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class AppState:
     current: DisplayState = DisplayState.UNKNOWN
-    last_state_change: Optional[datetime.datetime] = field(default_factory=datetime.datetime.now)
-    playing: PlayingState = field(default_factory=PlayingState)
-    screensaver: ScreensaverState = field(default_factory=ScreensaverState)
+    last_state_change_time: datetime.datetime = field(default_factory=datetime.datetime.now)
+    state_data: Optional[StateData] = None
 
 
 class StateManager:
-    def __init__(self):
+    def __init__(self) -> None:
         self.logger = Logger().get_logger()
         self.state = AppState()
 
-    def set_state(self, new_state: DisplayState):
+    def set_state(self, new_state: DisplayState, state_data: Optional[StateData]) -> None:
         if self.state.current != new_state:
+            self.state = replace(
+                self.state,
+                current=new_state,
+                last_state_change_time=datetime.datetime.now(),
+                state_data=state_data
+            )
             self.logger.info(f"State changed from {self.state.current.name} to {new_state.name}")
-            self.state.current = new_state
-            self.state.last_state_change = datetime.datetime.now()
 
-    def set_playing_state(self, song_title: str, song_remaining_duration: int):
-        self.state.playing.song_title = song_title
-        self.state.playing.song_remaining_duration = song_remaining_duration
-        self.state.playing.song_identified_time = datetime.datetime.now()
-        self.set_state(DisplayState.PLAYING)
+    def set_unknown_state(self) -> None:
+        self.set_state(DisplayState.UNKNOWN, None)
 
-    def set_screensaver_state(self):
-        self.set_state(DisplayState.SCREENSAVER)
+    def set_clean_state(self) -> None:
+        self.set_state(DisplayState.CLEAN, None)
 
-    def set_weather_state(self, weather_info: dict):
-        self.state.screensaver.weather_info = weather_info
+    def set_playing_state(self, song_title: str, song_remaining_duration: int) -> None:
+        playing_state = PlayingState(
+            song_title=song_title,
+            song_remaining_duration=song_remaining_duration,
+            song_identified_time=datetime.datetime.now()
+        )
+        self.set_state(DisplayState.PLAYING, playing_state)
 
-    def should_refresh_weather(self) -> bool:
-        last_fetched = self.state.screensaver.weather_info["fetched_at"]
-        return datetime.datetime.now() - last_fetched >= datetime.timedelta(minutes=30)
+    def set_screensaver_state(self, weather_info: dict) -> None:
+        screensaver_state = ScreensaverState(weather_info=weather_info)
+        self.set_state(DisplayState.SCREENSAVER, screensaver_state)
+
+    def weather_info_outdated(self) -> bool:
+        if isinstance(self.state.state_data, ScreensaverState):
+            last_fetched = self.state.state_data.weather_info["fetched_at"]
+            return datetime.datetime.now() - last_fetched >= datetime.timedelta(minutes=30)
+        return False
 
     def music_still_playing_but_song_ended(self) -> bool:
-        return self.get_state() == DisplayState.PLAYING and datetime.datetime.now() - self.state.playing.song_identified_time >= datetime.timedelta(
-            seconds=self.state.playing.song_remaining_duration)
+        if isinstance(self.state.state_data, PlayingState):
+            elapsed_time = datetime.datetime.now() - self.state.state_data.song_identified_time
+            return elapsed_time >= datetime.timedelta(seconds=self.state.state_data.song_remaining_duration)
+        return False
 
     def no_song_identify_triggered_for_more_than_a_minute(self) -> bool:
-        return datetime.datetime.now() - self.state.last_state_change >= datetime.timedelta(
-            minutes=1)
+        elapsed_time = datetime.datetime.now() - self.state.last_state_change_time
+        return elapsed_time >= datetime.timedelta(minutes=1)
 
-    def get_state(self):
+    def get_state(self) -> AppState:
         return self.state
 
-    def get_playing_state(self):
-        return self.state.playing
+    def get_playing_state(self) -> Optional[PlayingState]:
+        if isinstance(self.state.state_data, PlayingState):
+            return self.state.state_data
+        return None
 
-    def get_screensaver_state(self):
-        return self.state.screensaver
+    def get_screensaver_state(self) -> Optional[ScreensaverState]:
+        if isinstance(self.state.state_data, ScreensaverState):
+            return self.state.state_data
+        return None

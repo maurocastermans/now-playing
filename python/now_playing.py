@@ -48,7 +48,6 @@ class NowPlaying:
 
         self.pic_counter = 0
         self.state_manager = StateManager()
-        self.state_manager.set_weather_state(self.weather_service.get_weather_info())
         self.inky_auto = auto
         self.inky_clean = CLEAN
         self._display_clean()
@@ -138,7 +137,7 @@ class NowPlaying:
 
                 inky.show()
                 time.sleep(1.0)
-            self.state_manager.set_state(DisplayState.CLEAN)
+            self.state_manager.set_clean_state()
         except Exception as e:
             self.logger.error(f'Display clean error: {e}')
             self.logger.error(traceback.format_exc())
@@ -323,12 +322,22 @@ class NowPlaying:
             )
 
     def _handle_no_music_playing(self):
-        if self.state_manager.should_refresh_weather():
-            self.state_manager.set_weather_state(self.weather_service.get_weather_info())
+        if self.state_manager.get_state().current != DisplayState.SCREENSAVER:
+            self._handle_screensaver_state()
+        elif self.state_manager.get_state().current == DisplayState.SCREENSAVER:
+            self._update_weather_info_if_needed()
 
-        if self.state_manager.get_state().current != DisplayState.SCREENSAVER and self.state_manager.no_song_identify_triggered_for_more_than_a_minute():
-            self._display_update_process(weather_info=self.state_manager.get_screensaver_state().weather_info)
-            self.state_manager.set_screensaver_state()
+    def _handle_screensaver_state(self):
+        if self.state_manager.no_song_identify_triggered_for_more_than_a_minute():
+            weather_info = self.state_manager.get_screensaver_state().weather_info
+            self._display_update_process(weather_info=weather_info)
+            self.state_manager.set_screensaver_state(weather_info=weather_info)
+
+    def _update_weather_info_if_needed(self):
+        if self.state_manager.weather_info_outdated():
+            updated_weather_info = self.weather_service.get_weather_info()
+            self._display_update_process(weather_info=updated_weather_info)
+            self.state_manager.set_screensaver_state(weather_info=updated_weather_info)
 
     def _calculate_remaining_song_duration(self, song_info):
         if song_info and song_info.song_duration and song_info.offset:

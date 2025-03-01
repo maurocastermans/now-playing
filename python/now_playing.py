@@ -350,6 +350,9 @@ class NowPlaying:
         return 30  # Default retry interval if song identification fails
 
     def _handle_no_music(self, weather_info, last_was_playing_music_time):
+        self.logger.info(f"current_view: {self.current_view}")
+        self.logger.info(f"last_was_playing_music_time: {last_was_playing_music_time}")
+        self.logger.info(f"boolean: {datetime.datetime.now() - last_was_playing_music_time >= datetime.timedelta(minutes=1)}")
         if self.current_view != ViewState.NOTHING_PLAYING and datetime.datetime.now() - last_was_playing_music_time >= datetime.timedelta(minutes=1):
             self._display_update_process(weather_info=weather_info)
 

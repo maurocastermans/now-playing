@@ -335,10 +335,10 @@ class NowPlaying:
 
     def _handle_music_playing(self, audio):
         if self.current_view != ViewState.PLAYING or datetime.datetime.now() - self.state[ViewState.PLAYING][
-            "song_identify_time"] >= datetime.timedelta(
+            "song_identified_time"] >= datetime.timedelta(
                 seconds=self.state[ViewState.PLAYING]["song_remaining_duration"]):
             song_info = self._trigger_song_identify(audio)
-            self.state[ViewState.PLAYING]["song_identify_time"] = datetime.datetime.now()
+            self.state[ViewState.PLAYING]["song_identified_time"] = datetime.datetime.now()
             self.state[ViewState.PLAYING]["song_remaining_duration"] = self._calculate_remaining_song_duration(
                 song_info)
 
@@ -355,7 +355,7 @@ class NowPlaying:
     def _handle_no_music_playing(self):
         self._update_weather_info_if_outdated()
         if self.current_view != ViewState.NOTHING_PLAYING and datetime.datetime.now() - self.state[ViewState.PLAYING][
-            "song_indentify_time"] >= datetime.timedelta(
+            "song_identified_time"] >= datetime.timedelta(
                 minutes=1):
             self._display_update_process(weather_info=self.state[ViewState.PLAYING][
                 "weather_info"])

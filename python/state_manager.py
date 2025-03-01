@@ -42,6 +42,7 @@ class StateManager:
         self.state = AppState()
 
     def set_state(self, new_state: DisplayState, state_data: Optional[StateData]) -> None:
+        old_state = self.state.current
         if self.state.current != new_state:
             self.state = replace(
                 self.state,
@@ -49,7 +50,7 @@ class StateManager:
                 last_state_change_time=datetime.datetime.now(),
                 state_data=state_data
             )
-            self.logger.info(f"State changed from {self.state.current.name} to {new_state.name}")
+            self.logger.info(f"State changed from {old_state.name} to {new_state.name}")
 
     def set_unknown_state(self) -> None:
         self.set_state(DisplayState.UNKNOWN, None)

@@ -1,7 +1,8 @@
 from logger import Logger
+import logging
 
 class Util:
-    logger = Logger().get_logger()
+    logger: logging.Logger = Logger().get_logger()
 
     @staticmethod
     def parse_coordinates(geo_coordinates: str) -> tuple[float, float]:

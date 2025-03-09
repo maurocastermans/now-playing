@@ -2,6 +2,7 @@ import datetime
 from enum import Enum
 from typing import Optional
 from dataclasses import dataclass, field, replace
+from service.weather_service import WeatherInfo
 
 from logger import Logger
 
@@ -19,14 +20,12 @@ class StateData:
 
 @dataclass(frozen=True)
 class PlayingState(StateData):
-    song_remaining_duration: Optional[int] = None
-    song_title: Optional[str] = None
-    song_identified_time: Optional[datetime.datetime] = None
+    song_remaining_duration: Optional[float] = None
 
 
 @dataclass(frozen=True)
 class ScreensaverState(StateData):
-    weather_info: Optional[dict] = None
+    weather_info: Optional[WeatherInfo] = None
 
 
 @dataclass(frozen=True)
@@ -53,34 +52,27 @@ class StateManager:
     def set_clean_state(self) -> None:
         self.set_state(DisplayState.CLEAN, None)
 
-    def set_playing_state(self, song_title: str, song_remaining_duration: int) -> None:
-        playing_state = PlayingState(
-            song_title=song_title,
-            song_remaining_duration=song_remaining_duration,
-            song_identified_time=datetime.datetime.now()
-        )
+    def set_playing_state(self, song_remaining_duration: float) -> None:
+        playing_state = PlayingState(song_remaining_duration=song_remaining_duration)
         self.set_state(DisplayState.PLAYING, playing_state)
 
-    def set_screensaver_state(self, weather_info: dict) -> None:
+    def set_screensaver_state(self, weather_info: WeatherInfo) -> None:
         screensaver_state = ScreensaverState(weather_info=weather_info)
         self.set_state(DisplayState.SCREENSAVER, screensaver_state)
 
-    def weather_info_outdated(self) -> bool:
+    def screensaver_still_up_but_weather_info_outdated(self) -> bool:
         if self.state.current == DisplayState.SCREENSAVER and isinstance(self.state.data, ScreensaverState):
-            last_fetched = self.state.data.weather_info["fetched_at"]
-            is_outdated = datetime.datetime.now() - last_fetched >= datetime.timedelta(minutes=60)
-            if is_outdated:
-                self.logger.info(f"Weather info is outdated. Last fetched at {last_fetched}.")
-            return is_outdated
+            last_fetched = self.state.data.weather_info.fetched_at
+            return datetime.datetime.now() - last_fetched >= datetime.timedelta(minutes=60)
         return False
 
-    def music_still_playing_but_song_ended(self) -> bool:
+    def music_is_still_playing_but_previous_song_ended(self) -> bool:
         if self.state.current == DisplayState.PLAYING and isinstance(self.state.data, PlayingState):
-            elapsed_time = datetime.datetime.now() - self.state.data.song_identified_time
+            elapsed_time = datetime.datetime.now() - self.state.last_state_change_time
             return elapsed_time >= datetime.timedelta(seconds=self.state.data.song_remaining_duration)
         return False
 
-    def no_song_identify_triggered_for_more_than_a_minute(self) -> bool:
+    def idle_for_more_than_one_minute(self) -> bool:
         elapsed_time = datetime.datetime.now() - self.state.last_state_change_time
         return elapsed_time >= datetime.timedelta(minutes=1)
 

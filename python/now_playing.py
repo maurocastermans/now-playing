@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-import datetime
 import time
 import sys
-from collections import namedtuple
+
+import numpy as np
+
 from logger import Logger
 import os
 import traceback
@@ -12,27 +13,24 @@ import configparser
 import requests
 import signal
 from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageEnhance
+from typing import Tuple
 
-from service.song_identify_service import SongIdentifyService
+from service.song_identify_service import SongIdentifyService, SongInfo
 from service.audio_processing_utils import AudioProcessingUtils
 from service.audio_recording_service import AudioRecordingService
 from service.music_detection_service import MusicDetectionService
-from service.weather_service import WeatherService
+from service.weather_service import WeatherService, WeatherInfo
 
 from inky.auto import auto
 from inky.inky_uc8159 import CLEAN
 from state_manager import StateManager, DisplayState
 
-SongInfo = namedtuple('SongInfo', ['title', 'artist', 'album_art', 'offset', 'song_duration'])
-
 
 class NowPlaying:
-    def __init__(self, delay=120, recording_duration=10):
+    def __init__(self, recording_duration=10):
         signal.signal(signal.SIGTERM, self._handle_sigterm)
-        self.delay = delay
         self.recording_duration = recording_duration
 
-        # Configuration for the matrix
         self.config = configparser.ConfigParser()
         self.config.read(os.path.join(os.path.dirname(__file__), '..', 'config', 'eink_options.ini'))
 
@@ -48,9 +46,9 @@ class NowPlaying:
 
         self.pic_counter = 0
         self.state_manager = StateManager()
+        self._clean_display_and_set_clean_state()
         self.inky_auto = auto
         self.inky_clean = CLEAN
-        self._display_clean()
 
     def _handle_sigterm(self, sig, frame):
         self.logger.warning('SIGTERM received stopping')
@@ -125,7 +123,7 @@ class NowPlaying:
             h_taken_by_text += new_height
         return h_taken_by_text
 
-    def _display_clean(self):
+    def _clean_display_and_set_clean_state(self):
         """cleans the display
         """
         try:
@@ -238,7 +236,7 @@ class NowPlaying:
                                      x_end_offset=offset_px_right, offset_text_px_shadow=offset_text_px_shadow)
         return image_new
 
-    def _display_update_process(self, song_info: SongInfo = None, weather_info=None):
+    def _display_update_process(self, song_info: SongInfo = None, weather_info: WeatherInfo = None):
         """
         Args:
             song_info (SongInfo)
@@ -253,37 +251,19 @@ class NowPlaying:
 
             # not song playing use logo + weather info
             image = self._gen_pic(Image.open(self.config.get('DEFAULT', 'no_song_cover')),
-                                  weather_info['weather_sub_description'],
-                                  weather_info['temperature'])
+                                  weather_info.weather_sub_description,
+                                  weather_info.temperature)
         else:
             # not song playing use logo
             image = self._gen_pic(Image.open(self.config.get('DEFAULT', 'no_song_cover')), 'shazampi-eink',
                                   'No song playing')
         # clean screen every x pics
         if self.pic_counter > self.config.getint('DEFAULT', 'display_refresh_counter'):
-            self._display_clean()
+            self._clean_display_and_set_clean_state()
             self.pic_counter = 0
         # display picture on display
         self._display_image(image)
         self.pic_counter += 1
-
-    def _trigger_song_identify(self, audio) -> SongInfo:
-        """get the currently playing song
-
-        Returns:
-            SongInfo: with song name, album cover url, artist's name's
-        """
-        wav_audio = AudioProcessingUtils.to_wav(audio, 16000)
-        song_info_dict = self.song_identify_service.identify(wav_audio)
-        if song_info_dict:
-            self.logger.debug("found song")
-            return SongInfo(title=song_info_dict['title'],
-                            artist=song_info_dict['artist'],
-                            album_art=song_info_dict['album_art'],
-                            song_duration=song_info_dict['song_duration'],
-                            offset=song_info_dict['offset'])
-        else:
-            self.logger.debug("couldn't identify the music")
 
     def run(self) -> None:
         try:
@@ -301,45 +281,42 @@ class NowPlaying:
             self.logger.info('Application stopped...')
             sys.exit(0)
 
-    def _record_audio_and_detect_music(self):
-        audio = AudioProcessingUtils.resample(
-            self.audio_recording_service.record(self.recording_duration),
-            44100,
-            16000
-        )
+    def _record_audio_and_detect_music(self) -> Tuple[np.ndarray, bool]:
+        recorded_audio = self.audio_recording_service.record(self.recording_duration)
+        audio = AudioProcessingUtils.resample(recorded_audio, 44100, 16000)
         is_music_playing = self.music_detection_service.is_music_playing(audio)
         return audio, is_music_playing
 
-    def _handle_music_playing(self, audio):
-        song_info = self._trigger_song_identify(audio)
+    def _handle_music_playing(self, audio: np.ndarray) -> None:
         if (
                 self.state_manager.get_state().current != DisplayState.PLAYING
-                or (self.state_manager.music_still_playing_but_song_ended() and song_info
-                    and song_info.title != self.state_manager.get_playing_state().song_title)
+                or self.state_manager.music_is_still_playing_but_previous_song_ended()
         ):
+            song_info = self._trigger_song_identify(audio)
             self._set_playing_state_and_update_display(song_info)
 
-    def _set_playing_state_and_update_display(self, song_info):
-        self.state_manager.set_playing_state(
-            song_title=song_info.title,
-            song_remaining_duration=self._calculate_remaining_song_duration(song_info),
-        )
+    def _trigger_song_identify(self, audio: np.ndarray) -> SongInfo:
+        wav_audio = AudioProcessingUtils.to_wav(audio, 16000)
+        return self.song_identify_service.identify(wav_audio)
+
+    def _set_playing_state_and_update_display(self, song_info: SongInfo) -> None:
+        self.state_manager.set_playing_state(song_remaining_duration=self._calculate_remaining_song_duration(song_info))
         self._display_update_process(song_info=song_info)
 
-    def _calculate_remaining_song_duration(self, song_info):
+    def _calculate_remaining_song_duration(self, song_info: SongInfo) -> float:
         if song_info and song_info.song_duration and song_info.offset:
             return song_info.song_duration - song_info.offset - self.recording_duration
-        return 30  # Default retry interval if song identification fails
+        return 30
 
-    def _handle_no_music_playing(self):
-        weather_info = self.weather_service.get_weather_info()
+    def _handle_no_music_playing(self) -> None:
         if (
-                self.state_manager.get_state().current != DisplayState.SCREENSAVER and self.state_manager.no_song_identify_triggered_for_more_than_a_minute()
-                or self.state_manager.weather_info_outdated()
+                self.state_manager.get_state().current != DisplayState.SCREENSAVER and self.state_manager.idle_for_more_than_one_minute()
+                or self.state_manager.screensaver_still_up_but_weather_info_outdated()
         ):
+            weather_info = self.weather_service.get_weather_info()
             self._set_screensaver_state_and_update_display(weather_info)
 
-    def _set_screensaver_state_and_update_display(self, weather_info):
+    def _set_screensaver_state_and_update_display(self, weather_info: WeatherInfo) -> None:
         self.state_manager.set_screensaver_state(weather_info=weather_info)
         self._display_update_process(weather_info=weather_info)
 

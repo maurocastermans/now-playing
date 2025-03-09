@@ -1,29 +1,21 @@
 #!/bin/bash
 
-# Ensure the script is not run as root
 if [[ $EUID -eq 0 ]]; then
   echo "Error: This script must NOT be run as root. Please run it as a regular user." >&2
   exit 1
 fi
 
-# Check if SPI is enabled on the Raspberry Pi
-echo "==> Checking if SPI interface is enabled..."
-if [[ -e /dev/spidev0.0 ]] || [[ -e /dev/spidev0.1 ]]; then
-    echo "✔ SPI is enabled."
-else
-    echo "✘ SPI is not enabled. Please enable SPI using raspi-config and try again." >&2
-    exit 1
-fi
+echo "==> Enabling SPI..."
+sudo raspi-config nonint do_spi 0 && echo "✔ SPI is enabled."
 
-# Update package lists to ensure the system has the latest repository information
+echo "==> Enabling I2C..."
+sudo raspi-config nonint do_i2c 0 && echo "✔ I2C is enabled."
+
 echo "==> Updating package lists..."
 sudo apt update && echo "✔ Package lists updated successfully."
-echo
 
-# Upgrade all packages to the latest versions
 echo "==> Upgrading system packages to the latest versions..."
 sudo apt upgrade -y && echo "✔ System packages upgraded successfully."
-echo
 
 # Install Python 3.9 if not already installed
 # This step is necessary because the inky pip package depends on a version of Rumba for which Python <3.11 is required
@@ -46,44 +38,33 @@ else
     echo "✔ Python 3.9 installed successfully."
 fi
 
-# Install required system dependencies
 echo "==> Installing required system dependencies..."
 sudo apt-get install python3-numpy git libopenjp2-7 libportaudio2 -y \
   && echo "✔ System dependencies installed successfully."
-echo
 
-# Remove any existing installation of the now-playing project
 if [ -d "now-playing" ]; then
     echo "==> Found an existing installation of now-playing. Removing it..."
     sudo rm -rf now-playing && echo "✔ Old installation removed."
 fi
-echo
 
-# Clone the now-playing project from GitHub
 echo "==> Cloning the now-playing project from GitHub..."
 git clone https://github.com/maurocastermans/now-playing && echo "✔ Project cloned successfully."
 echo "Switching to the installation directory."
 cd now-playing || exit
 install_path=$(pwd)
 echo "✔ Current working directory: ${install_path}"
-echo
 
-# Set up a Python virtual environment for the project
 echo "==> Setting up a Python virtual environment..."
 python3.9 -m venv --system-site-packages venv && echo "✔ Python virtual environment created."
 echo "Activating the virtual environment..."
 source ${install_path}/venv/bin/activate && echo "✔ Virtual environment activated."
 
-# Upgrade pip explicitly for Python 3.9
 echo "==> Upgrading pip in the virtual environment..."
 pip install --upgrade pip && echo "✔ Pip upgraded successfully."
 
-# Install the required Python packages from the project's requirements file
 echo "==> Installing required Python packages..."
 pip3 install -r requirements.txt --upgrade && echo "✔ Python packages installed successfully."
-echo
 
-# Create required directories for configuration and resources
 echo "==> Setting up configuration and resources directories..."
 if ! [ -d "${install_path}/config" ]; then
     echo "Creating config directory..."
@@ -93,19 +74,14 @@ if ! [ -d "${install_path}/resources" ]; then
     echo "Creating resources directory..."
     mkdir -p "${install_path}/resources" && echo "✔ Resources directory created."
 fi
-echo
 
-# Configure e-ink display settings
-echo "==> Configuring display settings..."
+echo "==> Configuring e-ink display settings..."
 echo "[DEFAULT]" >> ${install_path}/config/eink_options.ini
 echo "width = 600" >> ${install_path}/config/eink_options.ini
 echo "height = 448" >> ${install_path}/config/eink_options.ini
 echo "album_cover_small_px = 250" >> ${install_path}/config/eink_options.ini
-echo "model = inky" >> ${install_path}/config/eink_options.ini
 echo "✔ Display configured for Pimoroni Inky Impression 5.7 (600x448)."
-echo
 
-# Add default configuration entries
 echo "==> Adding default configuration entries..."
 echo "; disable smaller album cover set to False" >> ${install_path}/config/eink_options.ini
 echo "; if disabled top offset is still calculated like as the following:" >> ${install_path}/config/eink_options.ini
@@ -129,9 +105,7 @@ echo "text_direction = bottom-up" >> ${install_path}/config/eink_options.ini
 echo "; possible modes are fit or repeat" >> ${install_path}/config/eink_options.ini
 echo "background_mode = fit" >> ${install_path}/config/eink_options.ini
 echo "✔ Default configuration added to eink_options.ini."
-echo
 
-# Prompt the user to set up the weather API
 echo "==> Setting up the Weather API..."
 echo "Please enter your OpenWeatherMap API key:"
 read openweathermap_api_key
@@ -141,19 +115,15 @@ echo "openweathermap_api_key = ${openweathermap_api_key}" >> ${install_path}/con
 echo "geo_coordinates = ${geo_coordinates}" >> ${install_path}/config/eink_options.ini
 echo "units = metric"  >> ${install_path}/config/eink_options.ini
 echo "✔ Weather API configuration completed."
-echo
 
-# Set up the log directory
 echo "==> Ensuring the log directory exists..."
 if ! [ -d "${install_path}/log" ]; then
     mkdir "${install_path}/log" && echo "✔ Log directory created."
 else
     echo "✔ Log directory already exists."
 fi
-echo
 
-# Install and configure the now-playing-display systemd service
-echo "==> Setting up the now-playing-display service..."
+echo "==> Setting up the now-playing-display systemd service..."
 if [ -f "/etc/systemd/system/now-playing-display.service" ]; then
     echo "Removing old now-playing-display service..."
     sudo systemctl stop now-playing-display
@@ -162,7 +132,6 @@ if [ -f "/etc/systemd/system/now-playing-display.service" ]; then
     sudo systemctl daemon-reload
     echo "✔ Old service removed."
 fi
-# Add new service
 UID_TO_USE=$(id -u)
 GID_TO_USE=$(id -g)
 sudo cp "${install_path}/setup/service_template/now-playing-display.service" /etc/systemd/system/

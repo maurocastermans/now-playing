@@ -17,7 +17,7 @@ class AudioRecordingService:
     def _setup_device(self) -> None:
         try:
             sd.default.samplerate = self._sampling_rate
-            sd.default._channels = self._channels
+            sd.default.channels = self._channels
             device_information = self._get_device_information()
             if device_information:
                 device_index, device_name = device_information

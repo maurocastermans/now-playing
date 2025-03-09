@@ -291,7 +291,7 @@ class NowPlaying:
         self.logger.info("Handling music is playing.")
         song_info = self._trigger_song_identify(audio)
         self.logger.info(f"cond1: {self.state_manager.get_state() != DisplayState.PLAYING}")
-        self.logger.info(f"cond2: {self._music_still_playing_but_different_song_identified(song_info)}")
+        self.logger.info(f"state: {self.state_manager.get_state()}")
         if (
                 self.state_manager.get_state() != DisplayState.PLAYING
                 or self._music_still_playing_but_different_song_identified(song_info)
@@ -299,10 +299,10 @@ class NowPlaying:
             self._set_playing_state_and_update_display(song_info)
 
     def _music_still_playing_but_different_song_identified(self, song_info: SongInfo):
+        self.logger.info(f"cond2: {self._music_still_playing_but_different_song_identified(song_info)}")
         self.logger.info(f"state: {self.state_manager.get_state()}")
         self.logger.info(f"song_info.title: {song_info.title}")
         self.logger.info(f"title in state: {self.state_manager.get_playing_state().song_title}")
-        self.logger.info(f"boolean: {self.state_manager.get_state() == DisplayState.PLAYING and song_info and song_info.title != self.state_manager.get_playing_state().song_title}")
         return self.state_manager.get_state() == DisplayState.PLAYING and song_info and song_info.title != self.state_manager.get_playing_state().song_title
 
     def _trigger_song_identify(self, audio: np.ndarray) -> SongInfo:

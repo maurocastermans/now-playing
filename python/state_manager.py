@@ -20,7 +20,8 @@ class StateData:
 
 @dataclass(frozen=True)
 class PlayingState(StateData):
-    song_remaining_duration: Optional[float] = None
+    # song_remaining_duration: Optional[float] = None
+    song_title: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -52,8 +53,8 @@ class StateManager:
     def set_clean_state(self) -> None:
         self.set_state(DisplayState.CLEAN, None)
 
-    def set_playing_state(self, song_remaining_duration: float) -> None:
-        playing_state = PlayingState(song_remaining_duration=song_remaining_duration)
+    def set_playing_state(self, song_title: str) -> None:
+        playing_state = PlayingState(song_title=song_title)
         self.set_state(DisplayState.PLAYING, playing_state)
 
     def set_screensaver_state(self, weather_info: WeatherInfo) -> None:
@@ -66,17 +67,6 @@ class StateManager:
             if datetime.datetime.now() - last_fetched >= datetime.timedelta(minutes=60):
                 self.logger.info("Weather info outdated.")
                 return True
-        return False
-
-    def music_is_still_playing_but_previous_song_ended(self) -> bool:
-        if self.state.current == DisplayState.PLAYING and isinstance(self.state.data, PlayingState):
-            elapsed_time = datetime.datetime.now() - self.state.last_state_change_time
-            if elapsed_time >= datetime.timedelta(seconds=self.state.data.song_remaining_duration):
-                self.logger.info(f"Previous song ended. Elapsed time: {elapsed_time.total_seconds()} seconds.")
-                return True
-            else:
-                self.logger.info(
-                    f"Music is still playing. {self.state.data.song_remaining_duration - elapsed_time.total_seconds():.2f} seconds remaining.")
         return False
 
     def idle_for_more_than_one_minute(self) -> bool:

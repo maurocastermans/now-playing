@@ -288,26 +288,24 @@ class NowPlaying:
         return audio, is_music_playing
 
     def _handle_music_playing(self, audio: np.ndarray) -> None:
+        self.logger.info("Handling music is playing.")
+        song_info = self._trigger_song_identify(audio)
         if (
-                self.state_manager.get_state().current != DisplayState.PLAYING
-                or self.state_manager.music_is_still_playing_but_previous_song_ended()
+                self.state_manager.get_state() != DisplayState.PLAYING
+                or self._music_still_playing_but_different_song_identified(song_info)
         ):
-            self.logger.info("Handling music is playing.")
-            song_info = self._trigger_song_identify(audio)
             self._set_playing_state_and_update_display(song_info)
+
+    def _music_still_playing_but_different_song_identified(self, song_info: SongInfo):
+        return self.state_manager.get_state() == DisplayState.PLAYING and song_info and song_info.title != self.state_manager.get_playing_state().song_title
 
     def _trigger_song_identify(self, audio: np.ndarray) -> SongInfo:
         wav_audio = AudioProcessingUtils.to_wav(audio, 16000)
         return self.song_identify_service.identify(wav_audio)
 
     def _set_playing_state_and_update_display(self, song_info: SongInfo) -> None:
-        self.state_manager.set_playing_state(song_remaining_duration=self._calculate_remaining_song_duration(song_info))
+        self.state_manager.set_playing_state(song_title=song_info.title)
         self._display_update_process(song_info=song_info)
-
-    def _calculate_remaining_song_duration(self, song_info: SongInfo) -> float:
-        if song_info and song_info.song_duration and song_info.offset:
-            return song_info.song_duration - song_info.offset - self.recording_duration
-        return 30
 
     def _handle_no_music_playing(self) -> None:
         if (

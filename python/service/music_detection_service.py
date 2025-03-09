@@ -61,4 +61,10 @@ class MusicDetectionService:
         scores = self._interpreter.get_tensor(self.scores_output_index)
 
         top_class, confidence = self._get_top_class(scores)
-        return top_class == 'Music' and confidence > 0.2
+
+        if top_class == 'Music' and confidence > 0.2:
+            self._logger.info(f"Music detected with confidence: {confidence:.2f}")
+            return True
+
+        self._logger.info("No music detected.")
+        return False

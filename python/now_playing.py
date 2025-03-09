@@ -292,6 +292,7 @@ class NowPlaying:
                 self.state_manager.get_state().current != DisplayState.PLAYING
                 or self.state_manager.music_is_still_playing_but_previous_song_ended()
         ):
+            self.logger.info("Handling music is playing.")
             song_info = self._trigger_song_identify(audio)
             self._set_playing_state_and_update_display(song_info)
 
@@ -313,6 +314,7 @@ class NowPlaying:
                 self.state_manager.get_state().current != DisplayState.SCREENSAVER and self.state_manager.idle_for_more_than_one_minute()
                 or self.state_manager.screensaver_still_up_but_weather_info_outdated()
         ):
+            self.logger.info("Handling no music is playing.")
             weather_info = self.weather_service.get_weather_info()
             self._set_screensaver_state_and_update_display(weather_info)
 

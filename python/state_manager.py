@@ -63,18 +63,27 @@ class StateManager:
     def screensaver_still_up_but_weather_info_outdated(self) -> bool:
         if self.state.current == DisplayState.SCREENSAVER and isinstance(self.state.data, ScreensaverState):
             last_fetched = self.state.data.weather_info.fetched_at
-            return datetime.datetime.now() - last_fetched >= datetime.timedelta(minutes=60)
+            if datetime.datetime.now() - last_fetched >= datetime.timedelta(minutes=60):
+                self.logger.info("Weather info outdated.")
+                return True
         return False
 
     def music_is_still_playing_but_previous_song_ended(self) -> bool:
         if self.state.current == DisplayState.PLAYING and isinstance(self.state.data, PlayingState):
             elapsed_time = datetime.datetime.now() - self.state.last_state_change_time
-            return elapsed_time >= datetime.timedelta(seconds=self.state.data.song_remaining_duration)
+            if elapsed_time >= datetime.timedelta(seconds=self.state.data.song_remaining_duration):
+                self.logger.info(f"Previous song ended. Elapsed time: {elapsed_time.total_seconds()} seconds.")
+                return True
+            else:
+                self.logger.info(
+                    f"Music is still playing. {self.state.data.song_remaining_duration - elapsed_time.total_seconds():.2f} seconds remaining.")
         return False
 
     def idle_for_more_than_one_minute(self) -> bool:
         elapsed_time = datetime.datetime.now() - self.state.last_state_change_time
-        return elapsed_time >= datetime.timedelta(minutes=1)
+        if elapsed_time >= datetime.timedelta(minutes=1):
+            self.logger.info("Idle for more than 1 minute.")
+            return True
 
     def get_state(self) -> AppState:
         return self.state

@@ -46,9 +46,9 @@ class NowPlaying:
 
         self.pic_counter = 0
         self.state_manager = StateManager()
-        self._clean_display_and_set_clean_state()
         self.inky_auto = auto
         self.inky_clean = CLEAN
+        self._clean_display_and_set_clean_state()
 
     def _handle_sigterm(self, sig, frame):
         self.logger.warning('SIGTERM received stopping')

@@ -2,8 +2,8 @@ import time
 import traceback
 import requests
 from PIL import Image, ImageDraw, ImageFont, ImageOps
-from weather_service import WeatherInfo
-from song_identify_service import SongInfo
+from service.weather_service import WeatherInfo
+from service.song_identify_service import SongInfo
 from inky.auto import auto
 from inky.inky_uc8159 import CLEAN
 

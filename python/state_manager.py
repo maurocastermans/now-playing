@@ -1,8 +1,9 @@
 import datetime
 from enum import Enum
 from typing import Optional
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass
 from service.weather_service import WeatherInfo
+from service.song_identify_service import SongInfo
 
 from logger import Logger
 
@@ -20,7 +21,6 @@ class StateData:
 
 @dataclass(frozen=True)
 class PlayingState(StateData):
-    # song_remaining_duration: Optional[float] = None
     song_title: Optional[str] = None
 
 
@@ -32,7 +32,6 @@ class ScreensaverState(StateData):
 @dataclass(frozen=True)
 class AppState:
     current: DisplayState = DisplayState.UNKNOWN
-    last_state_change_time: datetime.datetime = field(default_factory=datetime.datetime.now)
     data: Optional[StateData] = None
 
 
@@ -40,12 +39,12 @@ class StateManager:
     def __init__(self) -> None:
         self.logger = Logger().get_logger()
         self.state = AppState()
+        self.last_music_detected_time = None
 
     def set_state(self, new_state: DisplayState, data: Optional[StateData]) -> None:
         old_state = self.state.current
         self.state = AppState(
             current=new_state,
-            last_state_change_time=datetime.datetime.now(),
             data=data
         )
         self.logger.info(f"State change happened from {old_state.name} to {new_state.name}.")
@@ -61,6 +60,21 @@ class StateManager:
         screensaver_state = ScreensaverState(weather_info=weather_info)
         self.set_state(DisplayState.SCREENSAVER, screensaver_state)
 
+    def set_last_music_detected_time(self) -> None:
+        self.last_music_detected_time = datetime.datetime.now()
+
+    def no_music_detected_for_more_than_one_minute(self) -> bool:
+        if self.last_music_detected_time is None:
+            return True
+        elapsed_time = datetime.datetime.now() - self.last_music_detected_time
+        if elapsed_time >= datetime.timedelta(minutes=1):
+            self.logger.info("No music detected for more than 1 minute.")
+            return True
+        return False
+
+    def music_still_playing_but_different_song_identified(self, song_info: SongInfo):
+        return self.get_state().current == DisplayState.PLAYING and song_info.title != self.get_playing_state().song_title
+
     def screensaver_still_up_but_weather_info_outdated(self) -> bool:
         if self.state.current == DisplayState.SCREENSAVER and isinstance(self.state.data, ScreensaverState):
             last_fetched = self.state.data.weather_info.fetched_at
@@ -68,12 +82,6 @@ class StateManager:
                 self.logger.info("Weather info outdated.")
                 return True
         return False
-
-    def idle_for_more_than_one_minute(self) -> bool:
-        elapsed_time = datetime.datetime.now() - self.state.last_state_change_time
-        if elapsed_time >= datetime.timedelta(minutes=1):
-            self.logger.info("Idle for more than 1 minute.")
-            return True
 
     def get_state(self) -> AppState:
         return self.state

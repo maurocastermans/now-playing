@@ -50,7 +50,7 @@ class MusicDetectionService:
         top_index = mean_scores.argmax()
         return self._class_names[top_index], mean_scores[top_index]
 
-    def is_music_playing(self, waveform: np.ndarray) -> bool:
+    def is_music_detected(self, waveform: np.ndarray) -> bool:
         if not self._class_names:
             self._logger.error("Class names are not loaded. Cannot perform detection.")
             return False

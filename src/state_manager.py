@@ -67,7 +67,7 @@ class StateManager:
             return True
         elapsed_time = datetime.datetime.now() - self.last_music_detected_time
         if elapsed_time >= datetime.timedelta(minutes=1):
-            self.logger.info("No music detected for more than 1 minute.")
+            self.logger.info("No music detected for more than a minute.")
             return True
         return False
 

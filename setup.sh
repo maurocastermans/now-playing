@@ -122,7 +122,7 @@ if [ -f "/etc/systemd/system/now-playing.service" ]; then
     sudo systemctl disable now-playing
     sudo rm -rf /etc/systemd/system/now-playing.*
     sudo systemctl daemon-reload
-    echo "✔ Old systemd service removed."
+    echo "✔ Old now-playing systemd service removed."
 fi
 UID_TO_USE=$(id -u)
 GID_TO_USE=$(id -g)
@@ -134,8 +134,8 @@ sudo sed -i -e "/RestartSec/a User=${UID_TO_USE}" /etc/systemd/system/now-playin
 sudo sed -i -e "/User/a Group=${GID_TO_USE}" /etc/systemd/system/now-playing.service
 
 sudo systemctl daemon-reload
-sudo systemctl start now-playing-display
-sudo systemctl enable now-playing-display
-echo "✔ now-playing-display systemd service installed and started."
+sudo systemctl start now-playing
+sudo systemctl enable now-playing
+echo "✔ now-playing systemd service installed and started."
 
 echo "🎉 Setup is complete! Your now-playing display is configured."

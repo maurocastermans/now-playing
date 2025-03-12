@@ -205,12 +205,6 @@ class DisplayService:
         return image_new
 
     def display_update_process(self, song_info: SongInfo = None, weather_info: WeatherInfo = None):
-        """
-        Args:
-            song_info (SongInfo)
-        Returns:
-            int: updated picture refresh counter
-        """
         if song_info:
             # download cover
             image = self._gen_pic(Image.open(requests.get(song_info.album_art, stream=True).raw), song_info.artist,

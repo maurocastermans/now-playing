@@ -1,6 +1,5 @@
 import asyncio
 from typing import Optional, Dict, Any
-import requests
 import io
 from shazamio import Shazam
 from dataclasses import dataclass
@@ -15,8 +14,6 @@ class SongInfo:
     artist: Optional[str]
     album: Optional[str]
     album_art: Optional[str]
-    offset: Optional[float]
-    song_duration: Optional[float]
 
 class SongIdentifyService:
     def __init__(self) -> None:
@@ -40,10 +37,8 @@ class SongIdentifyService:
         return SongInfo(
             title=track.get("title", None),
             artist=track.get("subtitle", None),
-            album=self._extract_album_name(track),
-            album_art=track.get("images", {}).get("coverart", None),
-            offset=self._extract_offset(result),
-            song_duration=self._fetch_duration(track.get("isrc", None)),
+            album=SongIdentifyService._extract_album_name(track),
+            album_art=track.get("images", {}).get("coverart", None)
         )
 
     @staticmethod
@@ -53,28 +48,3 @@ class SongIdentifyService:
             if item.get("title") == "Album":
                 return item.get("text", None)
         return None
-
-    @staticmethod
-    def _extract_offset(result: Dict) -> Optional[float]:
-        matches = result.get("matches", [{}])
-        return matches[0].get("offset", None) if matches else None
-
-
-    def _fetch_duration(self, isrc: str) -> Optional[float]:
-        url = f"https://musicbrainz.org/ws/2/recording/?query=isrc:{isrc}&fmt=json"
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            return self._parse_duration(response.json())
-        except requests.exceptions.RequestException as ex:
-            self._logger.error(f"Error fetching song duration from MusicBrainz: {ex}")
-            return None
-
-    def _parse_duration(self, data: Dict) -> Optional[float]:
-        recordings = data.get("recordings", [])
-        if not recordings:
-            self._logger.info("No recordings found in MusicBrainz response.")
-            return None
-
-        duration_ms = recordings[0].get("length")
-        return duration_ms / 1000 if duration_ms else None

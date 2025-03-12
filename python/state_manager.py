@@ -63,6 +63,9 @@ class StateManager:
         self.last_music_detected_time = datetime.datetime.now()
 
     def no_music_detected_for_more_than_a_minute(self) -> bool:
+        self.logger.info(f"now: {datetime.datetime.now()}")
+        self.logger.info(f"last detected: {self.last_music_detected_time}")
+        self.logger.info(f"elapsed: {datetime.datetime.now() - self.last_music_detected_time}")
         elapsed_time = datetime.datetime.now() - self.last_music_detected_time
         if elapsed_time >= datetime.timedelta(minutes=1):
             self.logger.info("No music detected for more than 1 minute.")

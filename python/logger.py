@@ -1,6 +1,6 @@
 import logging
 import sys
-from configparser import ConfigParser
+import yaml
 from logging.handlers import RotatingFileHandler
 import os
 
@@ -10,9 +10,10 @@ class Logger:
 
     def __new__(cls):
         if cls._instance is None:
-            config = ConfigParser()
-            config.read(os.path.join(os.path.dirname(__file__), '..', 'config', 'eink_options.ini'))
-            log_file_path = config.get('DEFAULT', 'now_playing_log')
+            config_path = os.path.join(os.path.dirname(__file__), '..', 'config', 'config.yaml')
+            with open(config_path, 'r') as config_file:
+                config = yaml.safe_load(config_file)
+            log_file_path = config['log']['log_file_path']
             cls._instance = object.__new__(cls)
             cls._instance.logger = logging.getLogger("now_playing_logger")
             if not cls._instance.logger.hasHandlers():

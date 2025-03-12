@@ -134,72 +134,72 @@ class DisplayService:
         Returns:
             Image: The finished image
         """
-        album_cover_small_px = self.config.getint('DEFAULT', 'album_cover_small_px')
-        offset_px_left = self.config.getint('DEFAULT', 'offset_px_left')
-        offset_px_right = self.config.getint('DEFAULT', 'offset_px_right')
-        offset_px_top = self.config.getint('DEFAULT', 'offset_px_top')
-        offset_px_bottom = self.config.getint('DEFAULT', 'offset_px_bottom')
-        offset_text_px_shadow = self.config.getint('DEFAULT', 'offset_text_px_shadow')
-        text_direction = self.config.get('DEFAULT', 'text_direction')
+        album_cover_small_px = self.config['display']['album_cover_small_px']
+        offset_px_left = self.config['display']['offset_px_left']
+        offset_px_right = self.config['display']['offset_px_right']
+        offset_px_top = self.config['display']['offset_px_top']
+        offset_px_bottom = self.config['display']['offset_px_bottom']
+        offset_text_px_shadow = self.config['display']['offset_text_px_shadow']
+        text_direction = self.config['display']['text_direction']
         # The width and height of the background
         bg_w, bg_h = image.size
-        if self.config.get('DEFAULT', 'background_mode') == 'fit':
-            if bg_w < self.config.getint('DEFAULT', 'width') or bg_w > self.config.getint('DEFAULT', 'width'):
+        if self.config['display']['background_mode'] == 'fit':
+            if bg_w < self.config['display']['width'] or bg_w > self.config['display']['width']:
                 image_new = ImageOps.fit(image=image, size=(
-                    self.config.getint('DEFAULT', 'width'), self.config.getint('DEFAULT', 'height')), centering=(0, 0))
+                    self.config['display']['width'], self.config['display']['height']), centering=(0, 0))
             else:
                 # no need to expand just crop
                 image_new = image.crop(
-                    (0, 0, self.config.getint('DEFAULT', 'width'), self.config.getint('DEFAULT', 'height')))
-        if self.config.get('DEFAULT', 'background_mode') == 'repeat':
-            if bg_w < self.config.getint('DEFAULT', 'width') or bg_h < self.config.getint('DEFAULT', 'height'):
+                    (0, 0, self.config['display']['width'], self.config['display']['height']))
+        if self.config['display']['background_mode'] == 'repeat':
+            if bg_w < self.config['display']['width'] or bg_h < self.config['display']['height']:
                 # we need to repeat the background
                 # Creates a new empty image, RGB mode, and size of the display
                 image_new = Image.new('RGB',
-                                      (self.config.getint('DEFAULT', 'width'), self.config.getint('DEFAULT', 'height')))
+                                      (self.config['display']['width'], self.config['display']['height']))
                 # Iterate through a grid, to place the background tile
-                for x in range(0, self.config.getint('DEFAULT', 'width'), bg_w):
-                    for y in range(0, self.config.getint('DEFAULT', 'height'), bg_h):
+                for x in range(0, self.config['display']['width'], bg_w):
+                    for y in range(0, self.config['display']['height'], bg_h):
                         # paste the image at location x, y:
                         image_new.paste(image, (x, y))
             else:
                 # no need to repeat just crop
                 image_new = image.crop(
-                    (0, 0, self.config.getint('DEFAULT', 'width'), self.config.getint('DEFAULT', 'height')))
-        if self.config.getboolean('DEFAULT', 'album_cover_small'):
+                    (0, 0, self.config['display']['width'], self.config['display']['height']))
+        if self.config['display']['album_cover_small']:
             cover_smaller = image.resize([album_cover_small_px, album_cover_small_px], Image.LANCZOS)
-            album_pos_x = (self.config.getint('DEFAULT', 'width') - album_cover_small_px) // 2
+            album_pos_x = (self.config['display']['width'] - album_cover_small_px) // 2
             image_new.paste(cover_smaller, [album_pos_x, offset_px_top])
-        font_title = ImageFont.truetype(self.config.get('DEFAULT', 'font_path'),
-                                        self.config.getint('DEFAULT', 'font_size_title'))
-        font_artist = ImageFont.truetype(self.config.get('DEFAULT', 'font_path'),
-                                         self.config.getint('DEFAULT', 'font_size_artist'))
+        font_title = ImageFont.truetype(self.config['display']['font_path'],
+                                        self.config['display']['font_size_title'])
+        font_artist = ImageFont.truetype(self.config['display']['font_path'],
+                                        self.config['display']['font_size_artist'])
         if text_direction == 'top-down':
             title_position_y = album_cover_small_px + offset_px_top + 10
             title_height = self._fit_text_top_down(img=image_new, text=title, text_color='white',
                                                    shadow_text_color='black', font=font_title,
-                                                   font_size=self.config.getint('DEFAULT', 'font_size_title'),
+                                                   font_size=self.config['display']['font_size_title'],
                                                    y_offset=title_position_y, x_start_offset=offset_px_left,
                                                    x_end_offset=offset_px_right,
                                                    offset_text_px_shadow=offset_text_px_shadow)
             artist_position_y = album_cover_small_px + offset_px_top + 10 + title_height
             self._fit_text_top_down(img=image_new, text=artist, text_color='white', shadow_text_color='black',
-                                    font=font_artist, font_size=self.config.getint('DEFAULT', 'font_size_artist'),
+                                    font=font_artist, font_size=self.config['display']['font_size_artist'],
                                     y_offset=artist_position_y, x_start_offset=offset_px_left,
                                     x_end_offset=offset_px_right, offset_text_px_shadow=offset_text_px_shadow)
         if text_direction == 'bottom-up':
-            artist_position_y = self.config.getint('DEFAULT', 'height') - (
-                    offset_px_bottom + self.config.getint('DEFAULT', 'font_size_artist'))
+            artist_position_y = self.config['display']['height'] - (
+                    offset_px_bottom + self.config['display']['font_size_artist'])
             artist_height = self._fit_text_bottom_up(img=image_new, text=artist, text_color='white',
                                                      shadow_text_color='black', font=font_artist,
-                                                     font_size=self.config.getint('DEFAULT', 'font_size_artist'),
+                                                     font_size=self.config['display']['font_size_artist'],
                                                      y_offset=artist_position_y, x_start_offset=offset_px_left,
                                                      x_end_offset=offset_px_right,
                                                      offset_text_px_shadow=offset_text_px_shadow)
-            title_position_y = self.config.getint('DEFAULT', 'height') - (
-                    offset_px_bottom + self.config.getint('DEFAULT', 'font_size_title')) - artist_height
+            title_position_y = self.config['display']['height'] - (
+                    offset_px_bottom + self.config['display']['font_size_title']) - artist_height
             self._fit_text_bottom_up(img=image_new, text=title, text_color='white', shadow_text_color='black',
-                                     font=font_title, font_size=self.config.getint('DEFAULT', 'font_size_title'),
+                                     font=font_title, font_size=self.config['display']['font_size_title'],
                                      y_offset=title_position_y, x_start_offset=offset_px_left,
                                      x_end_offset=offset_px_right, offset_text_px_shadow=offset_text_px_shadow)
         return image_new
@@ -218,15 +218,15 @@ class DisplayService:
         elif weather_info:
 
             # not song playing use logo + weather info
-            image = self._gen_pic(Image.open(self.config.get('DEFAULT', 'no_song_cover')),
+            image = self._gen_pic(Image.open(self.config['display']['no_song_cover']),
                                   weather_info.weather_sub_description,
                                   weather_info.temperature)
         else:
             # not song playing use logo
-            image = self._gen_pic(Image.open(self.config.get('DEFAULT', 'no_song_cover')), 'shazampi-eink',
+            image = self._gen_pic(Image.open(self.config['display']['no_song_cover']), 'shazampi-eink',
                                   'No song playing')
         # clean screen every x pics
-        if self.pic_counter > self.config.getint('DEFAULT', 'display_refresh_counter'):
+        if self.pic_counter > self.config['display']['display_refresh_counter']:
             self._clean_display_and_set_clean_state()
             self.pic_counter = 0
         # display picture on display

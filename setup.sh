@@ -65,7 +65,7 @@ pip install --upgrade pip && echo "✔ Pip upgraded successfully."
 echo "==> Installing required Python packages..."
 pip3 install -r requirements.txt --upgrade && echo "✔ Python packages installed successfully."
 
-echo "==> Setting up configuration and resources directories..."
+echo "==> Setting up configuration, resources and log directories..."
 if ! [ -d "${install_path}/config" ]; then
     echo "Creating config directory..."
     mkdir -p "${install_path}/config" && echo "✔ Config directory created."
@@ -74,54 +74,46 @@ if ! [ -d "${install_path}/resources" ]; then
     echo "Creating resources directory..."
     mkdir -p "${install_path}/resources" && echo "✔ Resources directory created."
 fi
-
-echo "==> Configuring e-ink display settings..."
-echo "[DEFAULT]" >> ${install_path}/config/eink_options.ini
-echo "width = 600" >> ${install_path}/config/eink_options.ini
-echo "height = 448" >> ${install_path}/config/eink_options.ini
-echo "album_cover_small_px = 250" >> ${install_path}/config/eink_options.ini
-echo "✔ Display configured for Pimoroni Inky Impression 5.7 (600x448)."
-
-echo "==> Adding default configuration entries..."
-echo "; disable smaller album cover set to False" >> ${install_path}/config/eink_options.ini
-echo "; if disabled top offset is still calculated like as the following:" >> ${install_path}/config/eink_options.ini
-echo "; offset_px_top + album_cover_small_px" >> ${install_path}/config/eink_options.ini
-echo "album_cover_small = True" >> ${install_path}/config/eink_options.ini
-echo "; cleans the display every 20 picture" >> ${install_path}/config/eink_options.ini
-echo "; this takes ~60 seconds" >> ${install_path}/config/eink_options.ini
-echo "display_refresh_counter = 20" >> ${install_path}/config/eink_options.ini
-echo "now_playing_log = ${install_path}/log/now_playing.log" >> ${install_path}/config/eink_options.ini
-echo "no_song_cover = ${install_path}/resources/default.jpg" >> ${install_path}/config/eink_options.ini
-echo "font_path = ${install_path}/resources/CircularStd-Bold.otf" >> ${install_path}/config/eink_options.ini
-echo "font_size_title = 45" >> ${install_path}/config/eink_options.ini
-echo "font_size_artist = 35" >> ${install_path}/config/eink_options.ini
-echo "offset_px_left = 20" >> ${install_path}/config/eink_options.ini
-echo "offset_px_right = 20" >> ${install_path}/config/eink_options.ini
-echo "offset_px_top = 0" >> ${install_path}/config/eink_options.ini
-echo "offset_px_bottom = 20" >> ${install_path}/config/eink_options.ini
-echo "offset_text_px_shadow = 4" >> ${install_path}/config/eink_options.ini
-echo "; text_direction possible values: top-down or bottom-up" >> ${install_path}/config/eink_options.ini
-echo "text_direction = bottom-up" >> ${install_path}/config/eink_options.ini
-echo "; possible modes are fit or repeat" >> ${install_path}/config/eink_options.ini
-echo "background_mode = fit" >> ${install_path}/config/eink_options.ini
-echo "✔ Default configuration added to eink_options.ini."
+if ! [ -d "${install_path}/log" ]; then
+    echo "Creating log directory..."
+    mkdir -p "${install_path}/log" && echo "✔ Log directory created."
+fi
 
 echo "==> Setting up the Weather API..."
 echo "Please enter your OpenWeatherMap API key:"
 read openweathermap_api_key
 echo "Enter your location coordinates in the 'latitude,longitude' format:"
 read geo_coordinates
-echo "openweathermap_api_key = ${openweathermap_api_key}" >> ${install_path}/config/eink_options.ini
-echo "geo_coordinates = ${geo_coordinates}" >> ${install_path}/config/eink_options.ini
-echo "units = metric"  >> ${install_path}/config/eink_options.ini
-echo "✔ Weather API configuration completed."
 
-echo "==> Ensuring the log directory exists..."
-if ! [ -d "${install_path}/log" ]; then
-    mkdir "${install_path}/log" && echo "✔ Log directory created."
-else
-    echo "✔ Log directory already exists."
-fi
+echo "==> Setting up the configuration in config.yaml..."
+cat <<EOF > ${install_path}/config/config.yaml
+display:
+  width: 600
+  height: 448
+  album_cover_small_px: 250
+  album_cover_small: true
+  display_refresh_counter: 20
+  no_song_cover: "${install_path}/resources/default.jpg"
+  font_path: "${install_path}/resources/CircularStd-Bold.otf"
+  font_size_title: 45
+  font_size_artist: 35
+  offset_px_left: 20
+  offset_px_right: 20
+  offset_px_top: 0
+  offset_px_bottom: 20
+  offset_text_px_shadow: 4
+  text_direction: "bottom-up"
+  background_mode: "fit"
+
+weather:
+  openweathermap_api_key: "${openweathermap_api_key}"
+  geo_coordinates: "${geo_coordinates}"
+
+log:
+  log_file_path: "${install_path}/log/now_playing.log"
+
+EOF
+echo "✔ Configuration file created at ${install_path}/config/config.yaml."
 
 echo "==> Setting up the now-playing-display systemd service..."
 if [ -f "/etc/systemd/system/now-playing-display.service" ]; then

@@ -2,8 +2,8 @@ import sys
 import numpy as np
 import os
 import traceback
-import configparser
 import signal
+import yaml
 from typing import Tuple
 
 from logger import Logger
@@ -23,10 +23,12 @@ class NowPlaying:
         signal.signal(signal.SIGTERM, self._handle_exit)  # System or process termination
         signal.signal(signal.SIGINT, self._handle_exit)  # Ctrl+C termination
 
-        self.config = configparser.ConfigParser()
-        self.config.read(os.path.join(os.path.dirname(__file__), '..', 'config', 'eink_options.ini'))
-        openweathermap_api_key = self.config.get('DEFAULT', 'openweathermap_api_key')
-        geo_coordinates = self.config.get('DEFAULT', 'geo_coordinates')
+        config_path = os.path.join(os.path.dirname(__file__), '..', 'config', 'config.yaml')
+        with open(config_path, 'r') as config_file:
+            self.config = yaml.safe_load(config_file)
+
+        openweathermap_api_key = self.config['weather']['openweathermap_api_key']
+        geo_coordinates = self.config['weather']['geo_coordinates']
 
         self.audio_recording_service = AudioRecordingService(44100, 1, "USB")
         self.music_detection_service = MusicDetectionService(10)
@@ -36,8 +38,8 @@ class NowPlaying:
         self.state_manager = StateManager()
         self.display_service = DisplayService(self.config, self.state_manager)
 
-    def _handle_exit(self, sig, _frame):
-        self.logger.warning(f"Signal {sig} received, stopping gracefully")
+    def _handle_exit(self, _sig, _frame):
+        self.logger.warning(f"Stopping gracefully.")
         sys.exit(0)
 
     def run(self) -> None:
@@ -49,7 +51,7 @@ class NowPlaying:
                 else:
                     self._handle_no_music_detected()
             except Exception as e:
-                self.logger.error(e)
+                self.logger.error(f"Error occurred: {e}")
                 self.logger.error(traceback.format_exc())
 
     def _record_audio_and_detect_music(self) -> Tuple[np.ndarray, bool]:

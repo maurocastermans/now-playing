@@ -9,15 +9,14 @@ from logger import Logger
 
 
 class MusicDetectionService:
-    def __init__(self, recording_duration: int, model_path: str = 'python/ml-model/1.tflite',
-                 class_map_path: str = 'python/ml-model/yamnet_class_map.csv') -> None:
+    def __init__(self, recording_duration: int, model_path: str = 'src/ml-model/1.tflite',
+                 class_map_path: str = 'src/ml-model/yamnet_class_map.csv') -> None:
         self._logger = Logger().get_logger()
         self._recording_duration = recording_duration
         self._sampling_rate = 16000
-        self._model_path = model_path
         self._class_map_path = class_map_path
 
-        self._interpreter = Interpreter('python/ml-model/1.tflite')
+        self._interpreter = Interpreter(model_path)
         self._configure_interpreter()
 
         self._class_names = self._load_class_names()

@@ -115,30 +115,27 @@ log:
 EOF
 echo "✔ Configuration file created at ${install_path}/config/config.yaml."
 
-echo "==> Setting up the now-playing-display systemd service..."
-if [ -f "/etc/systemd/system/now-playing-display.service" ]; then
-    echo "Removing old now-playing-display service..."
-    sudo systemctl stop now-playing-display
-    sudo systemctl disable now-playing-display
-    sudo rm -rf /etc/systemd/system/now-playing-display.*
+echo "==> Setting up the now-playing systemd service..."
+if [ -f "/etc/systemd/system/now-playing.service" ]; then
+    echo "Removing old now-playing systemd service..."
+    sudo systemctl stop now-playing
+    sudo systemctl disable now-playing
+    sudo rm -rf /etc/systemd/system/now-playing.*
     sudo systemctl daemon-reload
-    echo "✔ Old service removed."
+    echo "✔ Old systemd service removed."
 fi
 UID_TO_USE=$(id -u)
 GID_TO_USE=$(id -g)
-sudo cp "${install_path}/setup/service_template/now-playing-display.service" /etc/systemd/system/
-sudo sed -i -e "/\[Service\]/a ExecStart=${install_path}/venv/bin/python3 ${install_path}/python/now_playing.py" /etc/systemd/system/now-playing-display.service
-sudo sed -i -e "/ExecStart/a WorkingDirectory=${install_path}" /etc/systemd/system/now-playing-display.service
-sudo sed -i -e "/EnvironmentFile/a User=${UID_TO_USE}" /etc/systemd/system/now-playing-display.service
-sudo sed -i -e "/User/a Group=${GID_TO_USE}" /etc/systemd/system/now-playing-display.service
-sudo mkdir -p /etc/systemd/system/now-playing-display.service.d
-now_playing_env_path=/etc/systemd/system/now-playing-display.service.d/now-playing-display_env.conf
-sudo touch $now_playing_env_path
-echo "[Service]" | sudo tee -a $now_playing_env_path > /dev/null
+
+sudo cp "${install_path}/now-playing.service" /etc/systemd/system/
+sudo sed -i -e "/\[Service\]/a ExecStart=${install_path}/venv/bin/python3 ${install_path}/src/now_playing.py" /etc/systemd/system/now-playing.service
+sudo sed -i -e "/ExecStart/a WorkingDirectory=${install_path}" /etc/systemd/system/now-playing.service
+sudo sed -i -e "/RestartSec/a User=${UID_TO_USE}" /etc/systemd/system/now-playing.service
+sudo sed -i -e "/User/a Group=${GID_TO_USE}" /etc/systemd/system/now-playing.service
+
 sudo systemctl daemon-reload
 sudo systemctl start now-playing-display
 sudo systemctl enable now-playing-display
-echo "✔ now-playing-display service installed and started."
-echo
+echo "✔ now-playing-display systemd service installed and started."
 
 echo "🎉 Setup is complete! Your now-playing display is configured."

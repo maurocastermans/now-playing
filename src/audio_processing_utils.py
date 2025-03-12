@@ -2,14 +2,10 @@ import io
 import numpy as np
 from scipy.signal import resample
 import scipy.io.wavfile as wav
-import logging
-
-import sys
-sys.path.append("..")
 from logger import Logger
 
 class AudioProcessingUtils:
-    _logger: logging.Logger = Logger().get_logger()
+    _logger = Logger().get_logger()
 
     @staticmethod
     def resample(audio: np.ndarray, source_sampling_rate: int, target_sampling_rate: int) -> np.ndarray:

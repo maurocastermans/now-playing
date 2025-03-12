@@ -2,14 +2,14 @@ import time
 import traceback
 import requests
 from PIL import Image, ImageDraw, ImageFont, ImageOps
-from service.weather_service import WeatherInfo
-from service.song_identify_service import SongInfo
-from state_manager import StateManager
+from weather_service import WeatherInfo
+from song_identify_service import SongInfo
 from inky.auto import auto
 from inky.inky_uc8159 import CLEAN
 
 import sys
 sys.path.append("..")
+from state_manager import StateManager
 from logger import Logger
 
 class DisplayService:
@@ -124,16 +124,6 @@ class DisplayService:
             self.logger.error(traceback.format_exc())
 
     def _gen_pic(self, image: Image, artist: str, title: str) -> Image:
-        """Generates the Picture for the display
-
-        Args:
-            image (Image): album cover to be used
-            artist (str): Artist text
-            title (str): Song text
-
-        Returns:
-            Image: The finished image
-        """
         album_cover_small_px = self.config['display']['album_cover_small_px']
         offset_px_left = self.config['display']['offset_px_left']
         offset_px_right = self.config['display']['offset_px_right']
@@ -206,7 +196,6 @@ class DisplayService:
 
     def display_update_process(self, song_info: SongInfo = None, weather_info: WeatherInfo = None):
         if song_info:
-            # download cover
             image = self._gen_pic(Image.open(requests.get(song_info.album_art, stream=True).raw), song_info.artist,
                                   song_info.title)
         elif weather_info:

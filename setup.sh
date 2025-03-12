@@ -124,14 +124,12 @@ if [ -f "/etc/systemd/system/now-playing.service" ]; then
     sudo systemctl daemon-reload
     echo "✔ Old now-playing systemd service removed."
 fi
-UID_TO_USE=$(id -u)
-GID_TO_USE=$(id -g)
 
 sudo cp "${install_path}/now-playing.service" /etc/systemd/system/
 sudo sed -i -e "/\[Service\]/a ExecStart=${install_path}/venv/bin/python3 ${install_path}/src/now_playing.py" /etc/systemd/system/now-playing.service
 sudo sed -i -e "/ExecStart/a WorkingDirectory=${install_path}" /etc/systemd/system/now-playing.service
-sudo sed -i -e "/RestartSec/a User=${UID_TO_USE}" /etc/systemd/system/now-playing.service
-sudo sed -i -e "/User/a Group=${GID_TO_USE}" /etc/systemd/system/now-playing.service
+sudo sed -i -e "/RestartSec/a User=$(id -u)" /etc/systemd/system/now-playing.service
+sudo sed -i -e "/User/a Group=$(id -g)" /etc/systemd/system/now-playing.service
 
 sudo systemctl daemon-reload
 sudo systemctl start now-playing

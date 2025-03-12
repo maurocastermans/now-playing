@@ -61,6 +61,9 @@ class MusicDetectionService:
 
         top_class, confidence = self._get_top_class(scores)
 
+        self._logger.info(f"top class: {top_class}")
+        self._logger.info(f"confidence: {confidence}")
+
         if top_class == 'Music' and confidence > 0.2:
             self._logger.info(f"Music detected with confidence: {confidence:.2f}")
             return True

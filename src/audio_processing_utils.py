@@ -24,6 +24,8 @@ class AudioProcessingUtils:
             buffer = io.BytesIO()
             wav.write(buffer, sampling_rate, audio)
             buffer.seek(0)
+            with open("test.wav", 'wb') as file:
+                file.write(buffer.read())
             return buffer
         except Exception as e:
             AudioProcessingUtils._logger.error(f"WAV conversion failed: {e}")

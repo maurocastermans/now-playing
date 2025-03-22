@@ -10,11 +10,10 @@ from inky.inky_uc8159 import CLEAN
 
 import sys
 
-from src.config import Config
-
 sys.path.append("..")
 from state_manager import StateManager
 from logger import Logger
+from config import Config
 
 
 class DisplayService:

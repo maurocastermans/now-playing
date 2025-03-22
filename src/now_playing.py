@@ -6,7 +6,7 @@ import signal
 from typing import Tuple, Final
 
 from logger import Logger
-from src.config import Config
+from config import Config
 from state_manager import StateManager, DisplayState
 
 from service.song_identify_service import SongIdentifyService, SongInfo

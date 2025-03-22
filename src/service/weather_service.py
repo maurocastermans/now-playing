@@ -6,11 +6,11 @@ from dataclasses import dataclass
 
 import sys
 
-from src.config import Config
 
 sys.path.append("..")
 from logger import Logger
 from util import Util
+from config import Config
 
 
 @dataclass(frozen=True)

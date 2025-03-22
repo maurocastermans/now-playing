@@ -1,9 +1,12 @@
 import datetime
+import logging
 from typing import Dict, Optional, Any, Final
 import requests
 from dataclasses import dataclass
 
 import sys
+
+from src.config import Config
 
 sys.path.append("..")
 from logger import Logger
@@ -18,16 +21,15 @@ class WeatherInfo:
 
 
 class WeatherService:
-    TEMPERATURE_UNIT: Final[str] = '°C'
-
-    def __init__(self, api_key: str, geo_coordinates: str) -> None:
-        self._logger = Logger().get_logger()
-        self._api_key = api_key
-        self._latitude, self._longitude = Util.parse_coordinates(geo_coordinates)
+    def __init__(self) -> None:
+        self._logger: logging.Logger = Logger().get_logger()
+        self._config = Config().get_config()
 
     def _build_request_url(self) -> str:
         base_url = "https://api.openweathermap.org/data/2.5/weather"
-        return f"{base_url}?lat={self._latitude}&lon={self._longitude}&units=metric&appid={self._api_key}"
+        api_key = self._config['weather']['openweathermap_api_key']
+        self._latitude, self._longitude = Util.parse_coordinates(self._config['weather']['geo_coordinates'])
+        return f"{base_url}?lat={self._latitude}&lon={self._longitude}&units=metric&appid={api_key}"
 
     def _fetch_weather_data(self) -> Optional[Dict[str, Any]]:
         try:
@@ -41,8 +43,8 @@ class WeatherService:
 
     def _extract_weather_info(self, data: Dict[str, Any]) -> WeatherInfo:
         try:
-            temperature = f"{round(data['main']['temp'])}{WeatherService.TEMPERATURE_UNIT}"
-            feels_like_temperature = f"{round(data['main']['feels_like'])}{WeatherService.TEMPERATURE_UNIT}"
+            temperature = f"{round(data['main']['temp'])}°C"
+            feels_like_temperature = f"{round(data['main']['feels_like'])}°C"
             description = data['weather'][0]['description'].title()
             weather_sub_description = f"Feels like {feels_like_temperature}. {description}."
             return WeatherInfo(

@@ -1,5 +1,5 @@
-- config maar 1x ophalen en dan doorgeven
+- [x] config maar 1x ophalen en dan doorgeven
 - display_service opkuisen
-- alle constants bundelen
+- [x] alle constants bundelen
 - coordinaten apart meegeven (util kan dan weg)
 - buttons gebruiken

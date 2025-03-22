@@ -1,3 +1,5 @@
+import logging
+
 import sounddevice as sd
 import numpy as np
 from typing import Optional, Tuple
@@ -7,11 +9,11 @@ sys.path.append("..")
 from logger import Logger
 
 class AudioRecordingService:
-    def __init__(self, sampling_rate: int, channels: int, device_substring: str = 'USB') -> None:
-        self._logger = Logger().get_logger()
-        self._device_substring = device_substring
-        self._sampling_rate = sampling_rate
-        self._channels = channels
+    def __init__(self, sampling_rate: int, channels: int,) -> None:
+        self._logger: logging.Logger = Logger().get_logger()
+        self._device_substring: str = 'USB'
+        self._sampling_rate: int = sampling_rate
+        self._channels: int = channels
         self._setup_device()
 
     def _setup_device(self) -> None:
@@ -22,7 +24,7 @@ class AudioRecordingService:
             if device_information:
                 device_index, device_name = device_information
                 sd.default.device = (device_index, None)
-                self._logger.info(f"Using audio device: {device_name}")
+                self._logger.debug(f"Using audio device: {device_name}")
             else:
                 self._logger.warning(
                     f"No audio device found matching '{self._device_substring}'. Defaulting to system device.")

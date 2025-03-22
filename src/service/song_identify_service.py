@@ -1,12 +1,15 @@
 import asyncio
+import logging
 from typing import Optional, Dict, Any
 import io
 from shazamio import Shazam
 from dataclasses import dataclass
 
 import sys
+
 sys.path.append("..")
 from logger import Logger
+
 
 @dataclass(frozen=True)
 class SongInfo:
@@ -15,10 +18,11 @@ class SongInfo:
     album: Optional[str]
     album_art: Optional[str]
 
+
 class SongIdentifyService:
     def __init__(self) -> None:
-        self._logger = Logger().get_logger()
-        self._shazam = Shazam()
+        self._logger: logging.Logger = Logger().get_logger()
+        self._shazam: Shazam = Shazam()
 
     def identify(self, audio_wav_buffer: io.BytesIO) -> Optional[SongInfo]:
         try:
@@ -27,12 +31,13 @@ class SongIdentifyService:
                 self._logger.info("No song identified in the provided audio buffer.")
                 return None
             self._logger.info("Song identified in the provided audio buffer.")
-            return self._parse_result(result)
+            return SongIdentifyService._parse_result(result)
         except Exception as ex:
             self._logger.error(f"Error identifying song: {ex}")
             return None
 
-    def _parse_result(self, result: Optional[Dict]) -> SongInfo:
+    @staticmethod
+    def _parse_result(result: Optional[Dict]) -> SongInfo:
         track = result["track"]
         return SongInfo(
             title=track.get("title", None),

@@ -28,10 +28,10 @@ if python3.9 --version &>/dev/null; then
 else
     echo "==> Installing Python3.9..."
     sudo apt-get install -y build-essential tk-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev libsqlite3-dev libssl-dev libbz2-dev libexpat1-dev liblzma-dev zlib1g-dev libffi-dev
-    cd ~/Downloads
+    cd ~/Downloads || exit 1
     wget https://www.python.org/ftp/python/3.9.19/Python-3.9.19.tgz
     sudo tar zxf Python-3.9.19.tgz
-    cd Python-3.9.19
+    cd Python-3.9.19 || exit 1
     sudo ./configure --enable-optimizations
     sudo make -j 4
     sudo make altinstall
@@ -52,12 +52,11 @@ git clone https://github.com/maurocastermans/now-playing && echo "✔ Project cl
 echo "Switching to the installation directory."
 cd now-playing || exit
 install_path=$(pwd)
-echo "✔ Current working directory: ${install_path}"
 
 echo "==> Setting up a Python virtual environment..."
 python3.9 -m venv --system-site-packages venv && echo "✔ Python virtual environment created."
 echo "Activating the virtual environment..."
-source ${install_path}/venv/bin/activate && echo "✔ Virtual environment activated."
+source "${install_path}/venv/bin/activate" && echo "✔ Virtual environment activated."
 
 echo "==> Upgrading pip in the virtual environment..."
 pip install --upgrade pip && echo "✔ Pip upgraded successfully."
@@ -81,12 +80,12 @@ fi
 
 echo "==> Setting up the Weather API..."
 echo "Please enter your OpenWeatherMap API key:"
-read openweathermap_api_key
+read -r openweathermap_api_key
 echo "Enter your location coordinates in the 'latitude,longitude' format:"
-read geo_coordinates
+read -r geo_coordinates
 
 echo "==> Setting up the configuration in config.yaml..."
-cat <<EOF > ${install_path}/config/config.yaml
+cat <<EOF > "${install_path}/config/config.yaml"
 display:
   width: 600
   height: 448

@@ -1,4 +1,6 @@
 import csv
+import logging
+
 import numpy as np
 from tflite_runtime.interpreter import Interpreter
 from typing import List, Tuple
@@ -9,17 +11,16 @@ from logger import Logger
 
 
 class MusicDetectionService:
-    def __init__(self, recording_duration: int, model_path: str = 'src/ml-model/1.tflite',
-                 class_map_path: str = 'src/ml-model/yamnet_class_map.csv') -> None:
-        self._logger = Logger().get_logger()
-        self._recording_duration = recording_duration
-        self._sampling_rate = 16000
-        self._class_map_path = class_map_path
+    def __init__(self, audio_duration_in_seconds: int) -> None:
+        self._logger: logging.Logger = Logger().get_logger()
+        self._audio_duration_in_seconds: int = audio_duration_in_seconds
+        self._sampling_rate: int = 16000
+        self._class_map_path: str = 'src/ml-model/yamnet_class_map.csv'
 
-        self._interpreter = Interpreter(model_path)
+        self._interpreter: Interpreter = Interpreter('src/ml-model/1.tflite')
         self._configure_interpreter()
 
-        self._class_names = self._load_class_names()
+        self._class_names: List[str] = self._load_class_names()
 
     def _configure_interpreter(self) -> None:
         self.input_details = self._interpreter.get_input_details()
@@ -29,7 +30,7 @@ class MusicDetectionService:
         self.scores_output_index = self.output_details[0]['index']
 
         # Resize input tensor to match the expected duration
-        input_shape = [self._recording_duration * self._sampling_rate]
+        input_shape = [self._audio_duration_in_seconds * self._sampling_rate]
         self._interpreter.resize_tensor_input(self.waveform_input_index, input_shape, strict=True)
 
         self._interpreter.allocate_tensors()
@@ -60,9 +61,6 @@ class MusicDetectionService:
         scores = self._interpreter.get_tensor(self.scores_output_index)
 
         top_class, confidence = self._get_top_class(scores)
-
-        self._logger.info(f"top class: {top_class}")
-        self._logger.info(f"confidence: {confidence}")
 
         if top_class == 'Music' and confidence > 0.2:
             self._logger.info(f"Music detected with confidence: {confidence:.2f}")

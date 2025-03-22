@@ -1,3 +1,4 @@
+import logging
 import time
 import traceback
 import requests
@@ -8,18 +9,21 @@ from inky.auto import auto
 from inky.inky_uc8159 import CLEAN
 
 import sys
+
+from src.config import Config
+
 sys.path.append("..")
 from state_manager import StateManager
 from logger import Logger
 
+
 class DisplayService:
-    def __init__(self, config, state_manager: StateManager):
-        self.config = config
-        self.state_manager = state_manager
-        self.logger = Logger().get_logger()
-        self.pic_counter = 0
-        self.inky_auto = auto
-        self.inky_clean = CLEAN
+    def __init__(self) -> None:
+        self._config: dict = Config().get_config()
+        self._state_manager: StateManager = StateManager()
+        self._logger: logging.Logger = Logger().get_logger()
+        self._pic_counter: int = 0
+        self._inky_display = auto()
         self._clean_display_and_set_clean_state()
 
     def _break_fix(self, text: str, width: int, font: ImageFont, draw: ImageDraw):
@@ -91,22 +95,19 @@ class DisplayService:
             h_taken_by_text += new_height
         return h_taken_by_text
 
-    def _clean_display_and_set_clean_state(self):
-        """cleans the display
-        """
+    def _clean_display_and_set_clean_state(self) -> None:
         try:
-            inky = self.inky_auto()
+            inky = self._inky_display()
             for _ in range(2):
                 for y in range(inky.height - 1):
                     for x in range(inky.width - 1):
-                        inky.set_pixel(x, y, self.inky_clean)
-
+                        inky.set_pixel(x, y, CLEAN)
                 inky.show()
                 time.sleep(1.0)
-            self.state_manager.set_clean_state()
+            self._state_manager.set_clean_state()
         except Exception as e:
-            self.logger.error(f'Display clean error: {e}')
-            self.logger.error(traceback.format_exc())
+            self._logger.error(f'Error cleaning display: {e}')
+            self._logger.error(traceback.format_exc())
 
     def _display_image(self, image: Image, saturation: float = 0.5):
         """displays a image on the inky display
@@ -116,80 +117,80 @@ class DisplayService:
             saturation (float, optional): saturation. Defaults to 0.5.
         """
         try:
-            inky = self.inky_auto()
+            inky = self._inky_display()
             inky.set_image(image, saturation=saturation)
             inky.show()
         except Exception as e:
-            self.logger.error(f'Display image error: {e}')
-            self.logger.error(traceback.format_exc())
+            self._logger.error(f'Display image error: {e}')
+            self._logger.error(traceback.format_exc())
 
     def _gen_pic(self, image: Image, artist: str, title: str) -> Image:
-        album_cover_small_px = self.config['display']['album_cover_small_px']
-        offset_px_left = self.config['display']['offset_px_left']
-        offset_px_right = self.config['display']['offset_px_right']
-        offset_px_top = self.config['display']['offset_px_top']
-        offset_px_bottom = self.config['display']['offset_px_bottom']
-        offset_text_px_shadow = self.config['display']['offset_text_px_shadow']
-        text_direction = self.config['display']['text_direction']
+        album_cover_small_px = self._config['display']['album_cover_small_px']
+        offset_px_left = self._config['display']['offset_px_left']
+        offset_px_right = self._config['display']['offset_px_right']
+        offset_px_top = self._config['display']['offset_px_top']
+        offset_px_bottom = self._config['display']['offset_px_bottom']
+        offset_text_px_shadow = self._config['display']['offset_text_px_shadow']
+        text_direction = self._config['display']['text_direction']
         # The width and height of the background
         bg_w, bg_h = image.size
-        if self.config['display']['background_mode'] == 'fit':
-            if bg_w < self.config['display']['width'] or bg_w > self.config['display']['width']:
+        if self._config['display']['background_mode'] == 'fit':
+            if bg_w < self._config['display']['width'] or bg_w > self._config['display']['width']:
                 image_new = ImageOps.fit(image=image, size=(
-                    self.config['display']['width'], self.config['display']['height']), centering=(0, 0))
+                    self._config['display']['width'], self._config['display']['height']), centering=(0, 0))
             else:
                 # no need to expand just crop
                 image_new = image.crop(
-                    (0, 0, self.config['display']['width'], self.config['display']['height']))
-        if self.config['display']['background_mode'] == 'repeat':
-            if bg_w < self.config['display']['width'] or bg_h < self.config['display']['height']:
+                    (0, 0, self._config['display']['width'], self._config['display']['height']))
+        if self._config['display']['background_mode'] == 'repeat':
+            if bg_w < self._config['display']['width'] or bg_h < self._config['display']['height']:
                 # we need to repeat the background
                 # Creates a new empty image, RGB mode, and size of the display
                 image_new = Image.new('RGB',
-                                      (self.config['display']['width'], self.config['display']['height']))
+                                      (self._config['display']['width'], self._config['display']['height']))
                 # Iterate through a grid, to place the background tile
-                for x in range(0, self.config['display']['width'], bg_w):
-                    for y in range(0, self.config['display']['height'], bg_h):
+                for x in range(0, self._config['display']['width'], bg_w):
+                    for y in range(0, self._config['display']['height'], bg_h):
                         # paste the image at location x, y:
                         image_new.paste(image, (x, y))
             else:
                 # no need to repeat just crop
                 image_new = image.crop(
-                    (0, 0, self.config['display']['width'], self.config['display']['height']))
-        if self.config['display']['album_cover_small']:
+                    (0, 0, self._config['display']['width'], self._config['display']['height']))
+        if self._config['display']['album_cover_small']:
             cover_smaller = image.resize([album_cover_small_px, album_cover_small_px], Image.LANCZOS)
-            album_pos_x = (self.config['display']['width'] - album_cover_small_px) // 2
+            album_pos_x = (self._config['display']['width'] - album_cover_small_px) // 2
             image_new.paste(cover_smaller, [album_pos_x, offset_px_top])
-        font_title = ImageFont.truetype(self.config['display']['font_path'],
-                                        self.config['display']['font_size_title'])
-        font_artist = ImageFont.truetype(self.config['display']['font_path'],
-                                        self.config['display']['font_size_artist'])
+        font_title = ImageFont.truetype(self._config['display']['font_path'],
+                                        self._config['display']['font_size_title'])
+        font_artist = ImageFont.truetype(self._config['display']['font_path'],
+                                         self._config['display']['font_size_artist'])
         if text_direction == 'top-down':
             title_position_y = album_cover_small_px + offset_px_top + 10
             title_height = self._fit_text_top_down(img=image_new, text=title, text_color='white',
                                                    shadow_text_color='black', font=font_title,
-                                                   font_size=self.config['display']['font_size_title'],
+                                                   font_size=self._config['display']['font_size_title'],
                                                    y_offset=title_position_y, x_start_offset=offset_px_left,
                                                    x_end_offset=offset_px_right,
                                                    offset_text_px_shadow=offset_text_px_shadow)
             artist_position_y = album_cover_small_px + offset_px_top + 10 + title_height
             self._fit_text_top_down(img=image_new, text=artist, text_color='white', shadow_text_color='black',
-                                    font=font_artist, font_size=self.config['display']['font_size_artist'],
+                                    font=font_artist, font_size=self._config['display']['font_size_artist'],
                                     y_offset=artist_position_y, x_start_offset=offset_px_left,
                                     x_end_offset=offset_px_right, offset_text_px_shadow=offset_text_px_shadow)
         if text_direction == 'bottom-up':
-            artist_position_y = self.config['display']['height'] - (
-                    offset_px_bottom + self.config['display']['font_size_artist'])
+            artist_position_y = self._config['display']['height'] - (
+                    offset_px_bottom + self._config['display']['font_size_artist'])
             artist_height = self._fit_text_bottom_up(img=image_new, text=artist, text_color='white',
                                                      shadow_text_color='black', font=font_artist,
-                                                     font_size=self.config['display']['font_size_artist'],
+                                                     font_size=self._config['display']['font_size_artist'],
                                                      y_offset=artist_position_y, x_start_offset=offset_px_left,
                                                      x_end_offset=offset_px_right,
                                                      offset_text_px_shadow=offset_text_px_shadow)
-            title_position_y = self.config['display']['height'] - (
-                    offset_px_bottom + self.config['display']['font_size_title']) - artist_height
+            title_position_y = self._config['display']['height'] - (
+                    offset_px_bottom + self._config['display']['font_size_title']) - artist_height
             self._fit_text_bottom_up(img=image_new, text=title, text_color='white', shadow_text_color='black',
-                                     font=font_title, font_size=self.config['display']['font_size_title'],
+                                     font=font_title, font_size=self._config['display']['font_size_title'],
                                      y_offset=title_position_y, x_start_offset=offset_px_left,
                                      x_end_offset=offset_px_right, offset_text_px_shadow=offset_text_px_shadow)
         return image_new
@@ -201,17 +202,17 @@ class DisplayService:
         elif weather_info:
 
             # not song playing use logo + weather info
-            image = self._gen_pic(Image.open(self.config['display']['no_song_cover']),
+            image = self._gen_pic(Image.open(self._config['display']['no_song_cover']),
                                   weather_info.weather_sub_description,
                                   weather_info.temperature)
         else:
             # not song playing use logo
-            image = self._gen_pic(Image.open(self.config['display']['no_song_cover']), 'shazampi-eink',
+            image = self._gen_pic(Image.open(self._config['display']['no_song_cover']), 'shazampi-eink',
                                   'No song playing')
         # clean screen every x pics
-        if self.pic_counter > self.config['display']['display_refresh_counter']:
+        if self._pic_counter > self._config['display']['display_refresh_counter']:
             self._clean_display_and_set_clean_state()
-            self.pic_counter = 0
+            self._pic_counter = 0
         # display picture on display
         self._display_image(image)
-        self.pic_counter += 1
+        self._pic_counter += 1

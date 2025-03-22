@@ -1,10 +1,12 @@
 import datetime
+import logging
 from enum import Enum
 from typing import Optional
 from dataclasses import dataclass
 from service.weather_service import WeatherInfo
 
 from logger import Logger
+from singleton_meta import SingletonMeta
 
 
 class DisplayState(Enum):
@@ -34,63 +36,63 @@ class AppState:
     data: Optional[StateData] = None
 
 
-class StateManager:
+class StateManager(metaclass=SingletonMeta):
     def __init__(self) -> None:
-        self.logger = Logger().get_logger()
-        self.state = AppState()
-        self.last_music_detected_time = None
+        self._logger: logging.Logger = Logger().get_logger()
+        self._state: AppState = AppState()
+        self._last_music_detected_time: Optional[datetime.datetime] = None
 
-    def set_state(self, new_state: DisplayState, data: Optional[StateData]) -> None:
-        old_state = self.state.current
-        self.state = AppState(
+    def _set_state(self, new_state: DisplayState, data: Optional[StateData]) -> None:
+        old_state = self._state.current
+        self._state = AppState(
             current=new_state,
             data=data
         )
-        self.logger.info(f"State changed from {old_state.name} to {new_state.name}.")
+        self._logger.info(f"State changed from {old_state.name} to {new_state.name}.")
 
     def set_clean_state(self) -> None:
-        self.set_state(DisplayState.CLEAN, None)
+        self._set_state(DisplayState.CLEAN, None)
 
     def set_playing_state(self, song_title: str) -> None:
         playing_state = PlayingState(song_title=song_title)
-        self.set_state(DisplayState.PLAYING, playing_state)
+        self._set_state(DisplayState.PLAYING, playing_state)
 
     def set_screensaver_state(self, weather_info: WeatherInfo) -> None:
         screensaver_state = ScreensaverState(weather_info=weather_info)
-        self.set_state(DisplayState.SCREENSAVER, screensaver_state)
+        self._set_state(DisplayState.SCREENSAVER, screensaver_state)
 
     def set_last_music_detected_time(self) -> None:
-        self.last_music_detected_time = datetime.datetime.now()
+        self._last_music_detected_time = datetime.datetime.now()
 
     def no_music_detected_for_more_than_a_minute(self) -> bool:
-        if self.last_music_detected_time is None:
+        if self._last_music_detected_time is None:
             return True
-        elapsed_time = datetime.datetime.now() - self.last_music_detected_time
+        elapsed_time = datetime.datetime.now() - self._last_music_detected_time
         if elapsed_time >= datetime.timedelta(minutes=1):
-            self.logger.info("No music detected for more than a minute.")
+            self._logger.info("No music detected for more than a minute.")
             return True
         return False
 
     def music_still_playing_but_different_song_identified(self, song_title: str):
-        return song_title != self.get_playing_state().song_title
+        return self.get_playing_state().song_title != song_title
 
     def screensaver_still_up_but_weather_info_outdated(self) -> bool:
         elapsed_time = datetime.datetime.now() - self.get_screensaver_state().weather_info.fetched_at
         if elapsed_time >= datetime.timedelta(minutes=60):
-            self.logger.info("Weather info outdated.")
+            self._logger.info("Weather info outdated.")
             return True
 
     def get_state(self) -> AppState:
-        return self.state
+        return self._state
 
     def get_playing_state(self) -> Optional[PlayingState]:
-        if self.state.current == DisplayState.PLAYING and isinstance(self.state.data, PlayingState):
-            return self.state.data
-        self.logger.warning("Attempted to access PlayingState while not in PLAYING state.")
+        if self._state.current == DisplayState.PLAYING and isinstance(self._state.data, PlayingState):
+            return self._state.data
+        self._logger.warning("Attempted to access PlayingState while not in PLAYING state.")
         return None
 
     def get_screensaver_state(self) -> Optional[ScreensaverState]:
-        if self.state.current == DisplayState.SCREENSAVER and isinstance(self.state.data, ScreensaverState):
-            return self.state.data
-        self.logger.warning("Attempted to access ScreensaverState while not in SCREENSAVER state.")
+        if self._state.current == DisplayState.SCREENSAVER and isinstance(self._state.data, ScreensaverState):
+            return self._state.data
+        self._logger.warning("Attempted to access ScreensaverState while not in SCREENSAVER state.")
         return None

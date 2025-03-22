@@ -1,12 +1,12 @@
+import logging
 import sys
 import numpy as np
-import os
 import traceback
 import signal
-import yaml
-from typing import Tuple
+from typing import Tuple, Final
 
 from logger import Logger
+from src.config import Config
 from state_manager import StateManager, DisplayState
 
 from service.song_identify_service import SongIdentifyService, SongInfo
@@ -18,29 +18,32 @@ from service.display_service import DisplayService
 
 
 class NowPlaying:
+    # Constants
+    AUDIO_DEVICE_SAMPLING_RATE: Final[int] = 44100
+    AUDIO_DEVICE_NUMBER_OF_CHANNELS: Final[int] = 1
+    AUDIO_RECORDING_DURATION_IN_SECONDS: Final[int] = 10
+    SUPPORTED_SAMPLING_RATE_BY_MUSIC_DETECTION_AND_SONG_IDENTIFY: Final[int] = 16000
+
     def __init__(self):
-        self._logger = Logger().get_logger()
         signal.signal(signal.SIGTERM, self._handle_exit)  # System or process termination
         signal.signal(signal.SIGINT, self._handle_exit)  # Ctrl+C termination
 
-        config_path = os.path.join(os.path.dirname(__file__), '..', 'config', 'config.yaml')
-        with open(config_path, 'r') as config_file:
-            self._config = yaml.safe_load(config_file)
+        # Singletons
+        self._config: dict = Config().get_config()
+        self._logger: logging.Logger = Logger().get_logger()
+        self._state_manager: StateManager = StateManager()
 
-        openweathermap_api_key = self._config['weather']['openweathermap_api_key']
-        geo_coordinates = self._config['weather']['geo_coordinates']
-
-        self._audio_recording_service = AudioRecordingService(44100, 1, "USB")
-        self._music_detection_service = MusicDetectionService(10)
-        self._song_identify_service = SongIdentifyService()
-        self._weather_service = WeatherService(openweathermap_api_key, geo_coordinates)
-
-        self._state_manager = StateManager()
-        self._display_service = DisplayService(self._config, self._state_manager)
-
-    def _handle_exit(self, _sig, _frame):
-        self._logger.warning(f"Stopping gracefully.")
-        sys.exit(0)
+        # Services
+        self._audio_recording_service: AudioRecordingService = AudioRecordingService(
+            sampling_rate=NowPlaying.AUDIO_DEVICE_SAMPLING_RATE,
+            channels=NowPlaying.AUDIO_DEVICE_NUMBER_OF_CHANNELS
+        )
+        self._music_detection_service: MusicDetectionService = MusicDetectionService(
+            audio_duration_in_seconds=NowPlaying.AUDIO_RECORDING_DURATION_IN_SECONDS
+        )
+        self._song_identify_service: SongIdentifyService = SongIdentifyService()
+        self._weather_service: WeatherService = WeatherService()
+        self._display_service: DisplayService = DisplayService()
 
     def run(self) -> None:
         while True:
@@ -55,8 +58,14 @@ class NowPlaying:
                 self._logger.error(traceback.format_exc())
 
     def _record_audio_and_detect_music(self) -> Tuple[np.ndarray, bool]:
-        recorded_audio = self._audio_recording_service.record(10)
-        audio = AudioProcessingUtils.resample(recorded_audio, 44100, 16000)
+        recorded_audio = self._audio_recording_service.record(
+            duration=NowPlaying.AUDIO_RECORDING_DURATION_IN_SECONDS
+        )
+        audio = AudioProcessingUtils.resample(
+            recorded_audio,
+            source_sampling_rate=NowPlaying.AUDIO_DEVICE_SAMPLING_RATE,
+            target_sampling_rate=NowPlaying.SUPPORTED_SAMPLING_RATE_BY_MUSIC_DETECTION_AND_SONG_IDENTIFY
+        )
         is_music_detected = self._music_detection_service.is_music_detected(audio)
         return audio, is_music_detected
 
@@ -72,7 +81,10 @@ class NowPlaying:
         self._state_manager.set_last_music_detected_time()
 
     def _trigger_song_identify(self, audio: np.ndarray) -> SongInfo:
-        wav_audio = AudioProcessingUtils.to_wav(audio, 16000)
+        wav_audio = AudioProcessingUtils.to_wav(
+            audio,
+            sampling_rate=NowPlaying.SUPPORTED_SAMPLING_RATE_BY_MUSIC_DETECTION_AND_SONG_IDENTIFY
+        )
         return self._song_identify_service.identify(wav_audio)
 
     def _set_playing_state_and_update_display(self, song_info: SongInfo) -> None:
@@ -90,6 +102,10 @@ class NowPlaying:
     def _set_screensaver_state_and_update_display(self, weather_info: WeatherInfo) -> None:
         self._state_manager.set_screensaver_state(weather_info=weather_info)
         self._display_service.display_update_process(weather_info=weather_info)
+
+    def _handle_exit(self, _sig, _frame):
+        self._logger.warning(f"Stopping gracefully.")
+        sys.exit(0)
 
 
 if __name__ == "__main__":

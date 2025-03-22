@@ -78,7 +78,7 @@ class NowPlaying:
         ):
             self._set_playing_state_and_update_display(song_info)
 
-        self._state_manager.set_last_music_detected_time()
+        self._state_manager.update_last_music_detected_time()
 
     def _trigger_song_identify(self, audio: np.ndarray) -> SongInfo:
         wav_audio = AudioProcessingUtils.to_wav(

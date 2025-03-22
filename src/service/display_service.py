@@ -22,7 +22,7 @@ class DisplayService:
         self._state_manager: StateManager = StateManager()
         self._logger: logging.Logger = Logger().get_logger()
         self._pic_counter: int = 0
-        self._inky_display = auto()
+        self._inky_display = auto
         self._clean_display_and_set_clean_state()
 
     def _break_fix(self, text: str, width: int, font: ImageFont, draw: ImageDraw):

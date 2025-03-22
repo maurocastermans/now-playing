@@ -6,10 +6,8 @@ from dataclasses import dataclass
 
 import sys
 
-
 sys.path.append("..")
 from logger import Logger
-from util import Util
 from config import Config
 
 
@@ -28,7 +26,8 @@ class WeatherService:
     def _build_request_url(self) -> str:
         base_url = "https://api.openweathermap.org/data/2.5/weather"
         api_key = self._config['weather']['openweathermap_api_key']
-        self._latitude, self._longitude = Util.parse_coordinates(self._config['weather']['geo_coordinates'])
+        self._latitude = self._config['weather']['latitude']
+        self._longitude = self._config['weather']['longitude']
         return f"{base_url}?lat={self._latitude}&lon={self._longitude}&units=metric&appid={api_key}"
 
     def _fetch_weather_data(self) -> Optional[Dict[str, Any]]:

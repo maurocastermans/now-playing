@@ -81,8 +81,10 @@ fi
 echo "==> Setting up the Weather API..."
 echo "Please enter your OpenWeatherMap API key:"
 read -r openweathermap_api_key
-echo "Enter your location coordinates in the 'latitude,longitude' format:"
-read -r geo_coordinates
+echo "Please enter your location latitude:"
+read -r latitude
+echo "Please enter your location longitude:"
+read -r longitude
 
 echo "==> Setting up the configuration in config.yaml..."
 cat <<EOF > "${install_path}/config/config.yaml"
@@ -106,7 +108,8 @@ display:
 
 weather:
   openweathermap_api_key: "${openweathermap_api_key}"
-  geo_coordinates: "${geo_coordinates}"
+  latitude: "${latitude}"
+  longitude: "${longitude}"
 
 log:
   log_file_path: "${install_path}/log/now_playing.log"

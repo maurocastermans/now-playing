@@ -36,11 +36,12 @@ class AppState:
     data: Optional[StateData] = None
 
 
-class StateManager(metaclass=SingletonMeta):
+class StateManager:
     def __init__(self) -> None:
         self._logger: logging.Logger = Logger().get_logger()
         self._state: AppState = AppState()
         self._last_music_detected_time: Optional[datetime.datetime] = None
+        self._image_counter = 0
 
     def _set_state(self, new_state: DisplayState, data: Optional[StateData]) -> None:
         old_state = self._state.current
@@ -63,6 +64,15 @@ class StateManager(metaclass=SingletonMeta):
 
     def update_last_music_detected_time(self) -> None:
         self._last_music_detected_time = datetime.datetime.now()
+
+    def increase_image_counter(self) -> None:
+        self._image_counter += 1
+
+    def should_clean_display(self) -> bool:
+        if self._image_counter > 20:
+            self._logger.debug("Display should be cleaned to avoid 'ghosting' from previous images.")
+            self._image_counter = 0
+            return True
 
     def no_music_detected_for_more_than_a_minute(self) -> bool:
         if self._last_music_detected_time is None:

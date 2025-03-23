@@ -27,10 +27,9 @@ class NowPlaying:
         signal.signal(signal.SIGTERM, self._handle_exit)  # System or process termination
         signal.signal(signal.SIGINT, self._handle_exit)  # Ctrl+C termination
 
-        # Singleton
+        # Singletons
         self._config: dict = Config().get_config()
         self._logger: logging.Logger = Logger().get_logger()
-        self._state_manager: StateManager = StateManager()
 
         # Services
         self._audio_recording_service: AudioRecordingService = AudioRecordingService(
@@ -43,6 +42,10 @@ class NowPlaying:
         self._song_identify_service: SongIdentifyService = SongIdentifyService()
         self._weather_service: WeatherService = WeatherService()
         self._display_service: DisplayService = DisplayService()
+
+        # State manager
+        self._state_manager: StateManager = StateManager()
+
         self._clean_display_and_set_clean_state()
 
     def _clean_display_and_set_clean_state(self) -> None:
@@ -92,8 +95,11 @@ class NowPlaying:
         return self._song_identify_service.identify(wav_audio)
 
     def _set_playing_state_and_update_display(self, song_info: SongInfo) -> None:
+        if self._state_manager.should_clean_display():
+            self._clean_display_and_set_clean_state()
         self._state_manager.set_playing_state(song_title=song_info.title)
         self._display_service.update_display_to_playing(song_info=song_info)
+        self._state_manager.increase_image_counter()
 
     def _handle_no_music_detected(self) -> None:
         if (
@@ -104,8 +110,11 @@ class NowPlaying:
             self._set_screensaver_state_and_update_display(weather_info)
 
     def _set_screensaver_state_and_update_display(self, weather_info: WeatherInfo) -> None:
+        if self._state_manager.should_clean_display():
+            self._clean_display_and_set_clean_state()
         self._state_manager.set_screensaver_state(weather_info=weather_info)
         self._display_service.update_display_to_screensaver(weather_info=weather_info)
+        self._state_manager.increase_image_counter()
 
     def _handle_exit(self, _sig, _frame):
         self._logger.warning(f"Stopping gracefully.")

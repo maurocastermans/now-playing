@@ -21,7 +21,6 @@ class DisplayService:
         self._config: dict = Config().get_config()
         self._state_manager: StateManager = StateManager()
         self._logger: logging.Logger = Logger().get_logger()
-        self._image_counter: int = 0
         self._inky = auto()
 
     def clean_display(self) -> None:
@@ -39,13 +38,13 @@ class DisplayService:
     def update_display_to_playing(self, song_info: SongInfo) -> None:
         album_cover_image = Image.open(requests.get(song_info.album_art, stream=True).raw)
         display_image = self._generate_display_image(album_cover_image, song_info.title, song_info.artist)
-        self._update_display(display_image)
+        self._show_image_on_display(display_image)
 
     def update_display_to_screensaver(self, weather_info: WeatherInfo) -> None:
         screensaver_image = Image.open(self._config['display']['screensaver_image'])
         display_image = self._generate_display_image(screensaver_image, weather_info.temperature,
                                                      weather_info.sub_description)
-        self._update_display(display_image)
+        self._show_image_on_display(display_image)
 
     def _generate_display_image(self, image: Image, title: str, subtitle: str) -> Image:
         image = self._fit_background_image(image)
@@ -109,14 +108,6 @@ class DisplayService:
             draw_position_y += font_size
 
         return len(lines) * font.size
-
-    def _update_display(self, display_image: Image) -> None:
-        if self._image_counter > 20:
-            self.clean_display()
-            self._state_manager.set_clean_state()
-            self._image_counter = 0
-        self._show_image_on_display(display_image)
-        self._image_counter += 1
 
     def _show_image_on_display(self, image: Image, saturation: float = 0.5) -> None:
         try:

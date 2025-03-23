@@ -43,6 +43,11 @@ class NowPlaying:
         self._song_identify_service: SongIdentifyService = SongIdentifyService()
         self._weather_service: WeatherService = WeatherService()
         self._display_service: DisplayService = DisplayService()
+        self._clean_display_and_set_clean_state()
+
+    def _clean_display_and_set_clean_state(self) -> None:
+        self._display_service.clean_display()
+        self._state_manager.set_clean_state()
 
     def run(self) -> None:
         while True:

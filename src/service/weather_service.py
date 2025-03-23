@@ -15,7 +15,7 @@ from config import Config
 @dataclass(frozen=True)
 class WeatherInfo:
     temperature: Optional[str]
-    weather_sub_description: Optional[str]
+    sub_description: Optional[str]
     fetched_at: Optional[datetime.datetime]
 
 
@@ -45,10 +45,10 @@ class WeatherService:
             temperature = f"{round(data['main']['temp'])}°C"
             feels_like_temperature = f"{round(data['main']['feels_like'])}°C"
             description = data['weather'][0]['description'].title()
-            weather_sub_description = f"Feels like {feels_like_temperature}. {description}."
+            sub_description = f"Feels like {feels_like_temperature}. {description}."
             return WeatherInfo(
                 temperature=temperature,
-                weather_sub_description=weather_sub_description,
+                sub_description=sub_description,
                 fetched_at=datetime.datetime.now()
             )
         except KeyError as e:
@@ -65,6 +65,6 @@ class WeatherService:
     def _default_weather_info() -> WeatherInfo:
         return WeatherInfo(
             temperature="inf",
-            weather_sub_description="No weather info",
+            sub_description="No weather info",
             fetched_at=datetime.datetime.now()
         )

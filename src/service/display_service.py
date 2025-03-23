@@ -23,18 +23,17 @@ class DisplayService:
         self._state_manager: StateManager = StateManager()
         self._logger: logging.Logger = Logger().get_logger()
         self._pic_counter: int = 0
-        self._inky_display: Any = auto
+        self._inky = auto()
         self._clean_display()
         self._state_manager.set_clean_state()
 
     def _clean_display(self) -> None:
         try:
-            inky = self._inky_display()
             for _ in range(2):
-                for y in range(inky.height - 1):
-                    for x in range(inky.width - 1):
-                        inky.set_pixel(x, y, CLEAN)
-                inky.show()
+                for y in range(self._inky.height - 1):
+                    for x in range(self._inky.width - 1):
+                        self._inky.set_pixel(x, y, CLEAN)
+                self._inky.show()
                 time.sleep(1.0)
         except Exception as e:
             self._logger.error(f'Error cleaning display: {e}')
@@ -42,113 +41,93 @@ class DisplayService:
 
     def _display_image(self, image: Image, saturation: float = 0.5):
         try:
-            inky = self._inky_display()
-            inky.set_image(image, saturation=saturation)
-            inky.show()
+            self._inky.set_image(image, saturation=saturation)
+            self._inky.show()
         except Exception as e:
             self._logger.error(f'Error displaying image: {e}')
             self._logger.error(traceback.format_exc())
 
     def _generate_background_image(self, image: Image) -> Image:
-        display_width, display_height = self._config['display']['width'], self._config['display']['height']
-        image_width, image_height = image.size
-        background_mode = self._config['display']['background_mode']
-
-        if background_mode == "fit":
-            return ImageOps.fit(image, (display_width, display_height), centering=(0, 0))
-        elif background_mode == "repeat":
-            new_image = Image.new("RGB", (display_width, display_height))
-            # Loop through the display space in increments of the image size
-            for x in range(0, display_width, image_width):
-                for y in range(0, display_height, image_height):
-                    new_image.paste(image, (x, y))
-            return new_image
-
-    def _generate_display_image(self, image: Image, artist: str, title: str) -> Image:
-        image = self._generate_background_image(image)
-        if self._config['display']['album_cover_small']:
-            image = self._generate_smaller_album_cover(image)
-
-        offset_px_left, offset_px_right = self._config['display']['offset_px_left'], self._config['display'][
-            'offset_px_right']
-        offset_px_bottom = self._config['display']['offset_px_bottom']
-        offset_text_px_shadow = self._config['display']['offset_text_px_shadow']
-
-        font_title = ImageFont.truetype(self._config['display']['font_path'],
-                                        self._config['display']['font_size_title'])
-        font_artist = ImageFont.truetype(self._config['display']['font_path'],
-                                         self._config['display']['font_size_artist'])
-
-        title_position_y = self._config['display']['height'] - (
-                offset_px_bottom + self._config['display']['font_size_artist'])
-        title_height = self._draw_text_bottom_up(image=image, text=artist, text_color='white',
-                                                 shadow_text_color='black', font=font_artist,
-                                                 font_size=self._config['display']['font_size_artist'],
-                                                 y_offset=title_position_y, x_start_offset=offset_px_left,
-                                                 x_end_offset=offset_px_right,
-                                                 offset_text_px_shadow=offset_text_px_shadow)
-        subtitle_position_y = self._config['display']['height'] - (
-                offset_px_bottom + self._config['display']['font_size_title']) - title_height
-        self._draw_text_bottom_up(image=image, text=title, text_color='white', shadow_text_color='black',
-                                  font=font_title, font_size=self._config['display']['font_size_title'],
-                                  y_offset=subtitle_position_y, x_start_offset=offset_px_left,
-                                  x_end_offset=offset_px_right, offset_text_px_shadow=offset_text_px_shadow)
-        return image
-
-    def _generate_smaller_album_cover(self, image) -> Image:
-        offset_px_top = self._config['display']['offset_px_top']
-        album_cover_small_px = self._config['display']['album_cover_small_px']
         display_width = self._config['display']['width']
-        cover_smaller = image.resize((album_cover_small_px, album_cover_small_px), Image.LANCZOS)
-        x_pos = (display_width - album_cover_small_px) // 2
-        image.paste(cover_smaller, (x_pos, offset_px_top))
+        display_height = self._config['display']['height']
+        return ImageOps.fit(image, (display_width, display_height), centering=(0, 0))
+
+    def _generate_display_image(self, image: Image, title: str, subtitle: str) -> Image:
+        image = self._generate_background_image(image)
+        if self._config['display']['small_album_cover']:
+            self._paste_smaller_album_cover(image)
+        self._draw_text(image, title, subtitle)
         return image
 
-    def update_display_to_playing(self, song_info: SongInfo):
-        album_cover_image = Image.open(requests.get(song_info.album_art, stream=True).raw)
-        display_image = self._generate_display_image(album_cover_image, song_info.artist, song_info.title)
-        self._update_display(display_image)
+    def _draw_text(self, image: Image, title: str, subtitle: str):
+        display_config = self._config['display']
+        font_title = ImageFont.truetype(display_config['font_path'], display_config['font_size_title'])
+        font_subtitle = ImageFont.truetype(display_config['font_path'], display_config['font_size_subtitle'])
 
-    def update_display_to_screensaver(self, weather_info: WeatherInfo):
-        screensaver_image = Image.open(self._config['display']['no_song_cover'])
-        display_image = self._generate_display_image(screensaver_image, weather_info.weather_sub_description,
-                                                     weather_info.temperature)
-        self._update_display(display_image)
+        subtitle_position_y = display_config['height'] - (
+                display_config['offset_bottom_px'] + display_config['font_size_subtitle'])
+        title_height = self._draw_text_bottom_up(image, subtitle, 'white', 'black', font_subtitle,
+                                                 subtitle_position_y)
 
-    def _update_display(self, display_image: Image):
-        if self._pic_counter > self._config['display']['display_refresh_counter']:
-            self._clean_display()
-            self._state_manager.set_clean_state()
-            self._pic_counter = 0
-        self._display_image(display_image)
-        self._pic_counter += 1
+        title_position_y = display_config['height'] - (
+                display_config['offset_bottom_px'] + display_config['font_size_title']) - title_height
+        self._draw_text_bottom_up(image, title, 'white', 'black', font_title, title_position_y)
 
     def _draw_text_bottom_up(self, image: Image, text: str, text_color: str, shadow_text_color: str, font: ImageFont,
-                             y_offset: int, font_size: int, x_start_offset: int = 0, x_end_offset: int = 0,
-                             offset_text_px_shadow: int = 0) -> int:
-        available_width = image.width - x_start_offset - x_end_offset - offset_text_px_shadow
+                             y_offset: int) -> int:
+        offset_left_px = self._config['display']['offset_left_px']
+        offset_right_px = self._config['display']['offset_right_px']
+        offset_text_shadow_px = self._config['display']['offset_text_shadow_px']
+        available_width = image.width - offset_left_px - offset_right_px - offset_text_shadow_px
         lines = DisplayService._break_text_to_lines(text, available_width, font)
-        self._logger.info(f"lines: {lines}")
 
         draw = ImageDraw.Draw(image)
         total_height = 0
         current_y = y_offset
+        font_size = font.size
         if len(lines) > 1:
             current_y -= (len(lines) - 1) * font_size
 
         for line in lines:
-            if offset_text_px_shadow > 0:
+            if offset_text_shadow_px > 0:
                 # Draw shadow
-                draw.text((x_start_offset + offset_text_px_shadow, current_y + offset_text_px_shadow), line, font=font, fill=shadow_text_color)
+                draw.text((offset_left_px + offset_text_shadow_px, current_y + offset_text_shadow_px), line, font=font,
+                          fill=shadow_text_color)
 
             # Draw the actual text
-            draw.text((x_start_offset, current_y), line, font=font, fill=text_color)
+            draw.text((offset_left_px, current_y), line, font=font, fill=text_color)
 
             # Update the vertical position and height
             current_y += font_size
             total_height += font_size
 
         return total_height
+
+    def _paste_smaller_album_cover(self, image) -> None:
+        offset_px_top = self._config['display']['offset_top_px']
+        small_album_cover_px = self._config['display']['small_album_cover_px']
+        display_width = self._config['display']['width']
+        small_album_cover_image = image.resize((small_album_cover_px, small_album_cover_px), Image.LANCZOS)
+        image.paste(small_album_cover_image, ((display_width - small_album_cover_px) // 2, offset_px_top))
+
+    def update_display_to_playing(self, song_info: SongInfo):
+        album_cover_image = Image.open(requests.get(song_info.album_art, stream=True).raw)
+        display_image = self._generate_display_image(album_cover_image, song_info.title, song_info.artist)
+        self._update_display(display_image)
+
+    def update_display_to_screensaver(self, weather_info: WeatherInfo):
+        screensaver_image = Image.open(self._config['display']['screensaver_image'])
+        display_image = self._generate_display_image(screensaver_image, weather_info.temperature,
+                                                     weather_info.weather_sub_description)
+        self._update_display(display_image)
+
+    def _update_display(self, display_image: Image):
+        if self._pic_counter > 20:
+            self._clean_display()
+            self._state_manager.set_clean_state()
+            self._pic_counter = 0
+        self._display_image(display_image)
+        self._pic_counter += 1
 
     @staticmethod
     def _break_text_to_lines(text: str, max_width: int, font: ImageFont) -> list[str]:

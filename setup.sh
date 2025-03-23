@@ -89,20 +89,17 @@ cat <<EOF > "${install_path}/config/config.yaml"
 display:
   width: 600
   height: 448
-  album_cover_small_px: 250
-  album_cover_small: true
-  display_refresh_counter: 20
-  no_song_cover: "${install_path}/resources/default.jpg"
+  small_album_cover: true
+  small_album_cover_px: 250
+  screensaver_image: "${install_path}/resources/default.jpg"
   font_path: "${install_path}/resources/CircularStd-Bold.otf"
   font_size_title: 45
-  font_size_artist: 35
-  offset_px_left: 20
-  offset_px_right: 20
-  offset_px_top: 0
-  offset_px_bottom: 20
-  offset_text_px_shadow: 4
-  text_direction: "bottom-up"
-  background_mode: "fit"
+  font_size_subtitle: 35
+  offset_left_px: 20
+  offset_right_px: 20
+  offset_top_px: 0
+  offset_bottom_px: 20
+  offset_text_shadow_px: 4
 
 weather:
   openweathermap_api_key: "${openweathermap_api_key}"

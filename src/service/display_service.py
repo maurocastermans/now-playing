@@ -52,11 +52,11 @@ class DisplayService:
     def _generate_background_image(self, image: Image) -> Image:
         display_width, display_height = self._config['display']['width'], self._config['display']['height']
         image_width, image_height = image.size
-        mode = self._config['display']['background_mode']
+        background_mode = self._config['display']['background_mode']
 
-        if mode == "fit":
+        if background_mode == "fit":
             return ImageOps.fit(image, (display_width, display_height), centering=(0, 0))
-        elif mode == "repeat":
+        elif background_mode == "repeat":
             new_image = Image.new("RGB", (display_width, display_height))
             # Loop through the display space in increments of the image size
             for x in range(0, display_width, image_width):
@@ -128,13 +128,15 @@ class DisplayService:
                              offset_text_px_shadow: int = 0) -> int:
         available_width = image.width - x_start_offset - x_end_offset - offset_text_px_shadow
         lines = DisplayService._break_text_to_lines(text, available_width, font)
+        self._logger.info(f"lines: {lines}")
 
-        # Draw the text starting from the bottom upwards
         draw = ImageDraw.Draw(image)
         total_height = 0
-        current_y = image.height - y_offset
+        current_y = y_offset
+        if len(lines) > 1:
+            current_y -= (len(lines) - 1) * font_size
 
-        for line in reversed(lines):
+        for line in lines:
             if offset_text_px_shadow > 0:
                 # Draw shadow
                 draw.text((x_start_offset + offset_text_px_shadow, current_y + offset_text_px_shadow), line, font=font, fill=shadow_text_color)
@@ -143,8 +145,8 @@ class DisplayService:
             draw.text((x_start_offset, current_y), line, font=font, fill=text_color)
 
             # Update the vertical position and height
-            current_y -= font.size
-            total_height += font.size
+            current_y += font_size
+            total_height += font_size
 
         return total_height
 

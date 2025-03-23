@@ -7,6 +7,7 @@ from service.weather_service import WeatherInfo
 from service.song_identify_service import SongInfo
 from inky.auto import auto
 from inky.inky_uc8159 import CLEAN
+from typing import Any
 
 import sys
 
@@ -22,7 +23,7 @@ class DisplayService:
         self._state_manager: StateManager = StateManager()
         self._logger: logging.Logger = Logger().get_logger()
         self._pic_counter: int = 0
-        self._inky_display = auto
+        self._inky_display: Any = auto
         self._clean_display_and_set_clean_state()
 
     def _break_fix(self, text: str, width: int, font: ImageFont, draw: ImageDraw):
@@ -123,7 +124,23 @@ class DisplayService:
             self._logger.error(f'Display image error: {e}')
             self._logger.error(traceback.format_exc())
 
-    def _gen_pic(self, image: Image, artist: str, title: str) -> Image:
+    def _generate_background(self, image: Image) -> Image:
+        display_width, display_height = self._config['display']['width'], self._config['display']['height']
+        image_width, image_height = image.size
+        mode = self._config['display']['background_mode']
+
+        if mode == "fit":
+            return ImageOps.fit(image, (display_width, display_height), centering=(0, 0))
+        elif mode == "repeat":
+            new_image = Image.new("RGB", (display_width, display_height))
+            for x in range(0, display_width, image_width):
+                for y in range(0, display_height, image_height):
+                    new_image.paste(image, (x, y))
+            return new_image
+        return image.crop((0, 0, display_width, display_height))
+
+    def _generate_display_image(self, image_new: Image, artist: str, title: str) -> Image:
+        image_new = self._generate_background(image_new)
         album_cover_small_px = self._config['display']['album_cover_small_px']
         offset_px_left = self._config['display']['offset_px_left']
         offset_px_right = self._config['display']['offset_px_right']
@@ -131,33 +148,8 @@ class DisplayService:
         offset_px_bottom = self._config['display']['offset_px_bottom']
         offset_text_px_shadow = self._config['display']['offset_text_px_shadow']
         text_direction = self._config['display']['text_direction']
-        # The width and height of the background
-        bg_w, bg_h = image.size
-        if self._config['display']['background_mode'] == 'fit':
-            if bg_w < self._config['display']['width'] or bg_w > self._config['display']['width']:
-                image_new = ImageOps.fit(image=image, size=(
-                    self._config['display']['width'], self._config['display']['height']), centering=(0, 0))
-            else:
-                # no need to expand just crop
-                image_new = image.crop(
-                    (0, 0, self._config['display']['width'], self._config['display']['height']))
-        if self._config['display']['background_mode'] == 'repeat':
-            if bg_w < self._config['display']['width'] or bg_h < self._config['display']['height']:
-                # we need to repeat the background
-                # Creates a new empty image, RGB mode, and size of the display
-                image_new = Image.new('RGB',
-                                      (self._config['display']['width'], self._config['display']['height']))
-                # Iterate through a grid, to place the background tile
-                for x in range(0, self._config['display']['width'], bg_w):
-                    for y in range(0, self._config['display']['height'], bg_h):
-                        # paste the image at location x, y:
-                        image_new.paste(image, (x, y))
-            else:
-                # no need to repeat just crop
-                image_new = image.crop(
-                    (0, 0, self._config['display']['width'], self._config['display']['height']))
         if self._config['display']['album_cover_small']:
-            cover_smaller = image.resize([album_cover_small_px, album_cover_small_px], Image.LANCZOS)
+            cover_smaller = image_new.resize([album_cover_small_px, album_cover_small_px], Image.LANCZOS)
             album_pos_x = (self._config['display']['width'] - album_cover_small_px) // 2
             image_new.paste(cover_smaller, [album_pos_x, offset_px_top])
         font_title = ImageFont.truetype(self._config['display']['font_path'],
@@ -194,24 +186,19 @@ class DisplayService:
                                      x_end_offset=offset_px_right, offset_text_px_shadow=offset_text_px_shadow)
         return image_new
 
-    def display_update_process(self, song_info: SongInfo = None, weather_info: WeatherInfo = None):
-        if song_info:
-            image = self._gen_pic(Image.open(requests.get(song_info.album_art, stream=True).raw), song_info.artist,
-                                  song_info.title)
-        elif weather_info:
+    def update_display_to_playing(self, song_info: SongInfo):
+        image = Image.open(requests.get(song_info.album_art, stream=True).raw)
+        image = self._generate_display_image(image, song_info.artist, song_info.title)
+        self._update_display(image)
 
-            # not song playing use logo + weather info
-            image = self._gen_pic(Image.open(self._config['display']['no_song_cover']),
-                                  weather_info.weather_sub_description,
-                                  weather_info.temperature)
-        else:
-            # not song playing use logo
-            image = self._gen_pic(Image.open(self._config['display']['no_song_cover']), 'shazampi-eink',
-                                  'No song playing')
-        # clean screen every x pics
+    def update_display_to_screensaver(self, weather_info: WeatherInfo):
+        image = Image.open(self._config['display']['no_song_cover'])
+        image = self._generate_display_image(image, weather_info.weather_sub_description, weather_info.temperature)
+        self._update_display(image)
+
+    def _update_display(self, image: Image):
         if self._pic_counter > self._config['display']['display_refresh_counter']:
             self._clean_display_and_set_clean_state()
             self._pic_counter = 0
-        # display picture on display
         self._display_image(image)
         self._pic_counter += 1

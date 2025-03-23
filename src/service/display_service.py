@@ -24,78 +24,10 @@ class DisplayService:
         self._logger: logging.Logger = Logger().get_logger()
         self._pic_counter: int = 0
         self._inky_display: Any = auto
-        self._clean_display_and_set_clean_state()
+        self._clean_display()
+        self._state_manager.set_clean_state()
 
-    def _break_fix(self, text: str, width: int, font: ImageFont, draw: ImageDraw):
-        """
-        Fix line breaks in text.
-        """
-        if not text:
-            return
-        if isinstance(text, str):
-            text = text.split()  # this creates a list of words
-        lo = 0
-        hi = len(text)
-        while lo < hi:
-            mid = (lo + hi + 1) // 2
-            t = ' '.join(text[:mid])  # this makes a string again
-            w = int(draw.textlength(text=t, font=font))
-            if w <= width:
-                lo = mid
-            else:
-                hi = mid - 1
-        t = ' '.join(text[:lo])  # this makes a string again
-        w = int(draw.textlength(text=t, font=font))
-        yield t, w
-        yield from self._break_fix(text[lo:], width, font, draw)
-
-    def _fit_text_top_down(self, img: Image, text: str, text_color: str, shadow_text_color: str, font: ImageFont,
-                           y_offset: int, font_size: int, x_start_offset: int = 0, x_end_offset: int = 0,
-                           offset_text_px_shadow: int = 0) -> int:
-        """
-        Fit text into container after applying line breaks. Returns the total
-        height taken up by the text
-        """
-        width = img.width - x_start_offset - x_end_offset - offset_text_px_shadow
-        draw = ImageDraw.Draw(img)
-        pieces = list(self._break_fix(text, width, font, draw))
-        y = y_offset
-        h_taken_by_text = 0
-        for t, _ in pieces:
-            if offset_text_px_shadow > 0:
-                draw.text((x_start_offset + offset_text_px_shadow, y + offset_text_px_shadow), t, font=font,
-                          fill=shadow_text_color)
-            draw.text((x_start_offset, y), t, font=font, fill=text_color)
-            new_height = font_size
-            y += font_size
-            h_taken_by_text += new_height
-        return h_taken_by_text
-
-    def _fit_text_bottom_up(self, img: Image, text: str, text_color: str, shadow_text_color: str, font: ImageFont,
-                            y_offset: int, font_size: int, x_start_offset: int = 0, x_end_offset: int = 0,
-                            offset_text_px_shadow: int = 0) -> int:
-        """
-        Fit text into container after applying line breaks. Returns the total
-        height taken up by the text
-        """
-        width = img.width - x_start_offset - x_end_offset - offset_text_px_shadow
-        draw = ImageDraw.Draw(img)
-        pieces = list(self._break_fix(text, width, font, draw))
-        y = y_offset
-        if len(pieces) > 1:
-            y -= (len(pieces) - 1) * font_size
-        h_taken_by_text = 0
-        for t, _ in pieces:
-            if offset_text_px_shadow > 0:
-                draw.text((x_start_offset + offset_text_px_shadow, y + offset_text_px_shadow), t, font=font,
-                          fill=shadow_text_color)
-            draw.text((x_start_offset, y), t, font=font, fill=text_color)
-            new_height = font_size
-            y += font_size
-            h_taken_by_text += new_height
-        return h_taken_by_text
-
-    def _clean_display_and_set_clean_state(self) -> None:
+    def _clean_display(self) -> None:
         try:
             inky = self._inky_display()
             for _ in range(2):
@@ -104,27 +36,20 @@ class DisplayService:
                         inky.set_pixel(x, y, CLEAN)
                 inky.show()
                 time.sleep(1.0)
-            self._state_manager.set_clean_state()
         except Exception as e:
             self._logger.error(f'Error cleaning display: {e}')
             self._logger.error(traceback.format_exc())
 
     def _display_image(self, image: Image, saturation: float = 0.5):
-        """displays a image on the inky display
-
-        Args:
-            image (Image): Image to display
-            saturation (float, optional): saturation. Defaults to 0.5.
-        """
         try:
             inky = self._inky_display()
             inky.set_image(image, saturation=saturation)
             inky.show()
         except Exception as e:
-            self._logger.error(f'Display image error: {e}')
+            self._logger.error(f'Error displaying image: {e}')
             self._logger.error(traceback.format_exc())
 
-    def _generate_background(self, image: Image) -> Image:
+    def _generate_background_image(self, image: Image) -> Image:
         display_width, display_height = self._config['display']['width'], self._config['display']['height']
         image_width, image_height = image.size
         mode = self._config['display']['background_mode']
@@ -133,72 +58,117 @@ class DisplayService:
             return ImageOps.fit(image, (display_width, display_height), centering=(0, 0))
         elif mode == "repeat":
             new_image = Image.new("RGB", (display_width, display_height))
+            # Loop through the display space in increments of the image size
             for x in range(0, display_width, image_width):
                 for y in range(0, display_height, image_height):
                     new_image.paste(image, (x, y))
             return new_image
-        return image.crop((0, 0, display_width, display_height))
 
-    def _generate_display_image(self, image_new: Image, artist: str, title: str) -> Image:
-        image_new = self._generate_background(image_new)
-        album_cover_small_px = self._config['display']['album_cover_small_px']
-        offset_px_left = self._config['display']['offset_px_left']
-        offset_px_right = self._config['display']['offset_px_right']
-        offset_px_top = self._config['display']['offset_px_top']
+    def _generate_display_image(self, image: Image, artist: str, title: str) -> Image:
+        image = self._generate_background_image(image)
+        if self._config['display']['album_cover_small']:
+            image = self._generate_smaller_album_cover(image)
+
+        offset_px_left, offset_px_right = self._config['display']['offset_px_left'], self._config['display'][
+            'offset_px_right']
         offset_px_bottom = self._config['display']['offset_px_bottom']
         offset_text_px_shadow = self._config['display']['offset_text_px_shadow']
-        text_direction = self._config['display']['text_direction']
-        if self._config['display']['album_cover_small']:
-            cover_smaller = image_new.resize([album_cover_small_px, album_cover_small_px], Image.LANCZOS)
-            album_pos_x = (self._config['display']['width'] - album_cover_small_px) // 2
-            image_new.paste(cover_smaller, [album_pos_x, offset_px_top])
+
         font_title = ImageFont.truetype(self._config['display']['font_path'],
                                         self._config['display']['font_size_title'])
         font_artist = ImageFont.truetype(self._config['display']['font_path'],
                                          self._config['display']['font_size_artist'])
-        if text_direction == 'top-down':
-            title_position_y = album_cover_small_px + offset_px_top + 10
-            title_height = self._fit_text_top_down(img=image_new, text=title, text_color='white',
-                                                   shadow_text_color='black', font=font_title,
-                                                   font_size=self._config['display']['font_size_title'],
-                                                   y_offset=title_position_y, x_start_offset=offset_px_left,
-                                                   x_end_offset=offset_px_right,
-                                                   offset_text_px_shadow=offset_text_px_shadow)
-            artist_position_y = album_cover_small_px + offset_px_top + 10 + title_height
-            self._fit_text_top_down(img=image_new, text=artist, text_color='white', shadow_text_color='black',
-                                    font=font_artist, font_size=self._config['display']['font_size_artist'],
-                                    y_offset=artist_position_y, x_start_offset=offset_px_left,
-                                    x_end_offset=offset_px_right, offset_text_px_shadow=offset_text_px_shadow)
-        if text_direction == 'bottom-up':
-            artist_position_y = self._config['display']['height'] - (
-                    offset_px_bottom + self._config['display']['font_size_artist'])
-            artist_height = self._fit_text_bottom_up(img=image_new, text=artist, text_color='white',
-                                                     shadow_text_color='black', font=font_artist,
-                                                     font_size=self._config['display']['font_size_artist'],
-                                                     y_offset=artist_position_y, x_start_offset=offset_px_left,
-                                                     x_end_offset=offset_px_right,
-                                                     offset_text_px_shadow=offset_text_px_shadow)
-            title_position_y = self._config['display']['height'] - (
-                    offset_px_bottom + self._config['display']['font_size_title']) - artist_height
-            self._fit_text_bottom_up(img=image_new, text=title, text_color='white', shadow_text_color='black',
-                                     font=font_title, font_size=self._config['display']['font_size_title'],
-                                     y_offset=title_position_y, x_start_offset=offset_px_left,
-                                     x_end_offset=offset_px_right, offset_text_px_shadow=offset_text_px_shadow)
-        return image_new
+
+        title_position_y = self._config['display']['height'] - (
+                offset_px_bottom + self._config['display']['font_size_artist'])
+        title_height = self._draw_text_bottom_up(image=image, text=artist, text_color='white',
+                                                 shadow_text_color='black', font=font_artist,
+                                                 font_size=self._config['display']['font_size_artist'],
+                                                 y_offset=title_position_y, x_start_offset=offset_px_left,
+                                                 x_end_offset=offset_px_right,
+                                                 offset_text_px_shadow=offset_text_px_shadow)
+        subtitle_position_y = self._config['display']['height'] - (
+                offset_px_bottom + self._config['display']['font_size_title']) - title_height
+        self._draw_text_bottom_up(image=image, text=title, text_color='white', shadow_text_color='black',
+                                  font=font_title, font_size=self._config['display']['font_size_title'],
+                                  y_offset=subtitle_position_y, x_start_offset=offset_px_left,
+                                  x_end_offset=offset_px_right, offset_text_px_shadow=offset_text_px_shadow)
+        return image
+
+    def _generate_smaller_album_cover(self, image) -> Image:
+        offset_px_top = self._config['display']['offset_px_top']
+        album_cover_small_px = self._config['display']['album_cover_small_px']
+        display_width = self._config['display']['width']
+        cover_smaller = image.resize((album_cover_small_px, album_cover_small_px), Image.LANCZOS)
+        x_pos = (display_width - album_cover_small_px) // 2
+        image.paste(cover_smaller, (x_pos, offset_px_top))
+        return image
 
     def update_display_to_playing(self, song_info: SongInfo):
-        image = Image.open(requests.get(song_info.album_art, stream=True).raw)
-        image = self._generate_display_image(image, song_info.artist, song_info.title)
-        self._update_display(image)
+        album_cover_image = Image.open(requests.get(song_info.album_art, stream=True).raw)
+        display_image = self._generate_display_image(album_cover_image, song_info.artist, song_info.title)
+        self._update_display(display_image)
 
     def update_display_to_screensaver(self, weather_info: WeatherInfo):
-        image = Image.open(self._config['display']['no_song_cover'])
-        image = self._generate_display_image(image, weather_info.weather_sub_description, weather_info.temperature)
-        self._update_display(image)
+        screensaver_image = Image.open(self._config['display']['no_song_cover'])
+        display_image = self._generate_display_image(screensaver_image, weather_info.weather_sub_description,
+                                                     weather_info.temperature)
+        self._update_display(display_image)
 
-    def _update_display(self, image: Image):
+    def _update_display(self, display_image: Image):
         if self._pic_counter > self._config['display']['display_refresh_counter']:
-            self._clean_display_and_set_clean_state()
+            self._clean_display()
+            self._state_manager.set_clean_state()
             self._pic_counter = 0
-        self._display_image(image)
+        self._display_image(display_image)
         self._pic_counter += 1
+
+    def _draw_text_bottom_up(self, image: Image, text: str, text_color: str, shadow_text_color: str, font: ImageFont,
+                             y_offset: int, font_size: int, x_start_offset: int = 0, x_end_offset: int = 0,
+                             offset_text_px_shadow: int = 0) -> int:
+        available_width = image.width - x_start_offset - x_end_offset - offset_text_px_shadow
+        lines = DisplayService._break_text_to_lines(text, available_width, font)
+
+        # Draw the text starting from the bottom upwards
+        draw = ImageDraw.Draw(image)
+        total_height = 0
+        current_y = image.height - y_offset
+
+        for line in reversed(lines):
+            if offset_text_px_shadow > 0:
+                # Draw shadow
+                draw.text((x_start_offset + offset_text_px_shadow, current_y + offset_text_px_shadow), line, font=font, fill=shadow_text_color)
+
+            # Draw the actual text
+            draw.text((x_start_offset, current_y), line, font=font, fill=text_color)
+
+            # Update the vertical position and height
+            current_y -= font.size
+            total_height += font.size
+
+        return total_height
+
+    @staticmethod
+    def _break_text_to_lines(text: str, max_width: int, font: ImageFont) -> list[str]:
+        words = text.split()  # Split text into words
+        lines = []
+        line = []
+
+        # Helper function to calculate the width of a line when joined as a string
+        def get_line_width(words_in_line: list[str]) -> int:
+            return int(ImageDraw.Draw(Image.new('RGB', (max_width, 1))).textlength(' '.join(words_in_line), font=font))
+
+        for word in words:
+            line.append(word)
+            line_width = get_line_width(line)
+
+            # If the line is too wide, move the word to the next line
+            if line_width > max_width:
+                lines.append(' '.join(line[:-1]))
+                line = [word]  # Start a new line with the current word
+
+        # Add the last line
+        if line:
+            lines.append(' '.join(line))
+
+        return lines

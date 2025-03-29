@@ -8,10 +8,10 @@ import sys
 sys.path.append("..")
 from logger import Logger
 
+
 class AudioRecordingService:
-    def __init__(self, sampling_rate: int, channels: int,) -> None:
+    def __init__(self, sampling_rate: int, channels: int) -> None:
         self._logger: logging.Logger = Logger().get_logger()
-        self._device_substring: str = 'USB'
         self._sampling_rate: int = sampling_rate
         self._channels: int = channels
         self._setup_device()
@@ -26,8 +26,7 @@ class AudioRecordingService:
                 sd.default.device = (device_index, None)
                 self._logger.debug(f"Using audio device: {device_name}")
             else:
-                self._logger.warning(
-                    f"No audio device found matching '{self._device_substring}'. Defaulting to system device.")
+                self._logger.error("No audio device found.")
         except Exception as e:
             self._logger.error(f"Audio device setup failed: {e}")
             raise RuntimeError("Audio device setup failed.") from e
@@ -36,7 +35,7 @@ class AudioRecordingService:
         try:
             devices = sd.query_devices()
             for idx, device in enumerate(devices):
-                if self._device_substring.lower() in device['name'].lower():
+                if 'usb' in device['name'].lower():
                     return idx, device['name']
             return None
         except Exception as e:

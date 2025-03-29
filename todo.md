@@ -1,4 +1,7 @@
-- [x] config maar 1x ophalen en dan doorgeven
-- display_service opkuisen
+- [x] singleton config en logger
+- [x] display_service opkuisen
 - [x] alle constants bundelen
-- buttons gebruiken
+- [ ] audio device constants in config yaml 
+- [ ] buttons gebruiken (add to spotify playlist, ...)
+- [x] quotes single/double consistent
+- [ ] python versie terug latest proberen

@@ -6,7 +6,6 @@ from shazamio import Shazam
 from dataclasses import dataclass
 
 import sys
-
 sys.path.append("..")
 from logger import Logger
 
@@ -38,18 +37,18 @@ class SongIdentifyService:
 
     @staticmethod
     def _parse_result(result: Optional[Dict]) -> SongInfo:
-        track = result["track"]
+        track = result['track']
         return SongInfo(
-            title=track.get("title", None),
-            artist=track.get("subtitle", None),
+            title=track.get('title', None),
+            artist=track.get('subtitle', None),
             album=SongIdentifyService._extract_album_name(track),
-            album_art=track.get("images", {}).get("coverart", None)
+            album_art=track.get('images', {}).get('coverart', None)
         )
 
     @staticmethod
     def _extract_album_name(track: Dict) -> Optional[str]:
-        metadata = track.get("sections", [{}])[0].get("metadata", [])
+        metadata = track.get('sections', [{}])[0].get('metadata', [])
         for item in metadata:
-            if item.get("title") == "Album":
-                return item.get("text", None)
+            if item.get('title') == 'Album':
+                return item.get('text', None)
         return None

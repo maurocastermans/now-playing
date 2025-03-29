@@ -5,7 +5,6 @@ import requests
 from dataclasses import dataclass
 
 import sys
-
 sys.path.append("..")
 from logger import Logger
 from util import Util

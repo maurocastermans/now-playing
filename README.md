@@ -1,17 +1,4 @@
-# ShazamPi E-Ink
-![shazampi-eink Logo](/images/logo.png)
-
-## Table of Contents
-- [ShazamPi E-Ink](#shazampi-e-ink)
-  - [Overview](#overview)
-  - [Getting Started](#getting-started)
-  - [Configuration](#configuration)
-  - [Supported Hardware](#supported-hardware)
-  - [Software](#software)
-  - [3D Printing](#3d-printing)
-    - [Free Cases](#free-cases)
-    - [Non-Free Cases from Pimoroni](#non-free-cases-from-pimoroni)
-  - [Showcase](#showcase)
+# Now-playing
 
 ## Overview
 This project is a spinoff of the spotipi-eink project but does not use Spotify (or any streaming service) for showing what's playing.  
@@ -28,10 +15,6 @@ Most of the work for displaying content is derived from [Spotipi-eink](https://g
 This has been tried and tested on the Raspberry Pi Zero 2W, so it should work on any Raspberry Pi released after that.
 
 ## Getting Started
-* Enable SPI and I2C under "Interface Options" with the command:
-    ```bash
-    sudo raspi-config
-    ```
 * Create an account at https://openweathermap.org/ and get api_key(free account)
 * Locate your geo co-ordinates using Google Maps(right-click on the location)
 

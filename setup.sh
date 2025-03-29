@@ -22,24 +22,24 @@ sudo apt upgrade -y && echo "✔ System packages upgraded successfully."
 # Although their documentation says the package is Python 3.11 supported...
 # Can take an hour or so to install
 # Can't use apt repository ppa:deadsnakes/ppa because we're on a Raspberry Pi
-echo "==> Checking if Python 3.9 is already installed..."
-if python3.9 --version &>/dev/null; then
-    echo "✔ Python 3.9 is already installed."
-else
-    echo "==> Installing Python3.9..."
-    sudo apt-get install -y build-essential tk-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev libsqlite3-dev libssl-dev libbz2-dev libexpat1-dev liblzma-dev zlib1g-dev libffi-dev
-    cd ~/Downloads || exit 1
-    wget https://www.python.org/ftp/python/3.9.19/Python-3.9.19.tgz
-    sudo tar zxf Python-3.9.19.tgz
-    cd Python-3.9.19 || exit 1
-    sudo ./configure --enable-optimizations
-    sudo make -j 4
-    sudo make altinstall
-    echo "✔ Python 3.9 installed successfully."
-fi
+#echo "==> Checking if Python 3.9 is already installed..."
+#if python3.9 --version &>/dev/null; then
+#    echo "✔ Python 3.9 is already installed."
+#else
+#    echo "==> Installing Python3.9..."
+#    sudo apt-get install -y build-essential tk-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev libsqlite3-dev libssl-dev libbz2-dev libexpat1-dev liblzma-dev zlib1g-dev libffi-dev
+#    cd ~/Downloads || exit 1
+#    wget https://www.python.org/ftp/python/3.9.19/Python-3.9.19.tgz
+#    sudo tar zxf Python-3.9.19.tgz
+#    cd Python-3.9.19 || exit 1
+#    sudo ./configure --enable-optimizations
+#    sudo make -j 4
+#    sudo make altinstall
+#    echo "✔ Python 3.9 installed successfully."
+#fi
 
 echo "==> Installing required system dependencies..."
-sudo apt-get install python3-numpy git libopenjp2-7 libportaudio2 -y \
+sudo apt-get install python3-pip python3-venv python3-numpy git libopenjp2-7 libportaudio2 -y \
   && echo "✔ System dependencies installed successfully."
 
 if [ -d "now-playing" ]; then
@@ -54,7 +54,7 @@ cd now-playing || exit
 install_path=$(pwd)
 
 echo "==> Setting up a Python virtual environment..."
-python3.9 -m venv --system-site-packages venv && echo "✔ Python virtual environment created."
+python3 -m venv --system-site-packages venv && echo "✔ Python virtual environment created."
 echo "Activating the virtual environment..."
 source "${install_path}/venv/bin/activate" && echo "✔ Virtual environment activated."
 
@@ -120,7 +120,6 @@ if [ -f "/etc/systemd/system/now-playing.service" ]; then
     sudo systemctl daemon-reload
     echo "✔ Old now-playing systemd service removed."
 fi
-
 sudo cp "${install_path}/now-playing.service" /etc/systemd/system/
 sudo sed -i -e "/\[Service\]/a ExecStart=${install_path}/venv/bin/python3 ${install_path}/src/now_playing.py" /etc/systemd/system/now-playing.service
 sudo sed -i -e "/ExecStart/a WorkingDirectory=${install_path}" /etc/systemd/system/now-playing.service

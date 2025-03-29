@@ -23,7 +23,7 @@ class NowPlaying:
     AUDIO_RECORDING_DURATION_IN_SECONDS: Final[int] = 10
     SUPPORTED_SAMPLING_RATE_BY_MUSIC_DETECTION_AND_SONG_IDENTIFY: Final[int] = 16000
 
-    def __init__(self):
+    def __init__(self) -> None:
         signal.signal(signal.SIGTERM, self._handle_exit)  # System or process termination
         signal.signal(signal.SIGINT, self._handle_exit)  # Ctrl+C termination
 
@@ -43,7 +43,6 @@ class NowPlaying:
         self._weather_service: WeatherService = WeatherService()
         self._display_service: DisplayService = DisplayService()
 
-        # State manager
         self._state_manager: StateManager = StateManager()
 
         self._clean_display_and_set_clean_state()
@@ -97,8 +96,8 @@ class NowPlaying:
     def _set_playing_state_and_update_display(self, song_info: SongInfo) -> None:
         if self._state_manager.should_clean_display():
             self._clean_display_and_set_clean_state()
-        self._state_manager.set_playing_state(song_title=song_info.title)
-        self._display_service.update_display_to_playing(song_info=song_info)
+        self._state_manager.set_playing_state(song_info.title)
+        self._display_service.update_display_to_playing(song_info)
         self._state_manager.increase_image_counter()
 
     def _handle_no_music_detected(self) -> None:
@@ -112,8 +111,8 @@ class NowPlaying:
     def _set_screensaver_state_and_update_display(self, weather_info: WeatherInfo) -> None:
         if self._state_manager.should_clean_display():
             self._clean_display_and_set_clean_state()
-        self._state_manager.set_screensaver_state(weather_info=weather_info)
-        self._display_service.update_display_to_screensaver(weather_info=weather_info)
+        self._state_manager.set_screensaver_state(weather_info)
+        self._display_service.update_display_to_screensaver(weather_info)
         self._state_manager.increase_image_counter()
 
     def _handle_exit(self, _sig, _frame):

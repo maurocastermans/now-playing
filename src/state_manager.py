@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from service.weather_service import WeatherInfo
 
 from logger import Logger
-from singleton_meta import SingletonMeta
 
 
 class DisplayState(Enum):
@@ -37,11 +36,11 @@ class AppState:
 
 
 class StateManager:
-    def __init__(self) -> None:
+    def __init__(self):
         self._logger: logging.Logger = Logger().get_logger()
         self._state: AppState = AppState()
         self._last_music_detected_time: Optional[datetime.datetime] = None
-        self._image_counter = 0
+        self._image_counter: int = 0
 
     def _set_state(self, new_state: DisplayState, data: Optional[StateData]) -> None:
         old_state = self._state.current

@@ -9,9 +9,7 @@ from inky.auto import auto
 from inky.inky_uc8159 import CLEAN
 
 import sys
-
 sys.path.append("..")
-from state_manager import StateManager
 from logger import Logger
 from config import Config
 
@@ -19,7 +17,6 @@ from config import Config
 class DisplayService:
     def __init__(self) -> None:
         self._config: dict = Config().get_config()
-        self._state_manager: StateManager = StateManager()
         self._logger: logging.Logger = Logger().get_logger()
         self._inky = auto()
 
@@ -32,7 +29,7 @@ class DisplayService:
                 self._inky.show()
                 time.sleep(1.0)
         except Exception as e:
-            self._logger.error(f'Error cleaning display: {e}')
+            self._logger.error(f"Error cleaning display: {e}")
             self._logger.error(traceback.format_exc())
 
     def update_display_to_playing(self, song_info: SongInfo) -> None:
@@ -50,7 +47,7 @@ class DisplayService:
         image = self._fit_background_image(image)
 
         if self._config['display']['small_album_cover']:
-            self._paste_smaller_album_cover(image)
+            self._add_smaller_album_cover(image)
 
         self._add_text(image, title, subtitle)
         return image
@@ -60,7 +57,7 @@ class DisplayService:
         display_height = self._config['display']['height']
         return ImageOps.fit(image, (display_width, display_height), centering=(0, 0))
 
-    def _paste_smaller_album_cover(self, image) -> None:
+    def _add_smaller_album_cover(self, image) -> None:
         offset_px_top = self._config['display']['offset_top_px']
         small_album_cover_px = self._config['display']['small_album_cover_px']
         display_width = self._config['display']['width']
@@ -97,13 +94,11 @@ class DisplayService:
 
         for line in lines:
             if offset_text_shadow_px > 0:
-                # Draw shadow
                 draw.text((offset_left_px + offset_text_shadow_px, draw_position_y + offset_text_shadow_px), line,
                           font=font,
-                          fill=shadow_text_color)
+                          fill=shadow_text_color)  # Draw shadow
 
-            # Draw the actual text
-            draw.text((offset_left_px, draw_position_y), line, font=font, fill=text_color)
+            draw.text((offset_left_px, draw_position_y), line, font=font, fill=text_color)  # Draw the actual text
 
             draw_position_y += font_size
 
@@ -114,30 +109,27 @@ class DisplayService:
             self._inky.set_image(image, saturation=saturation)
             self._inky.show()
         except Exception as e:
-            self._logger.error(f'Error displaying image: {e}')
+            self._logger.error(f"Error displaying image: {e}")
             self._logger.error(traceback.format_exc())
 
     @staticmethod
     def _break_text_to_lines(text: str, max_width: int, font: ImageFont) -> list[str]:
-        words = text.split()  # Split text into words
+        words = text.split()
         lines = []
         line = []
 
-        # Helper function to calculate the width of a line when joined as a string
-        def get_line_width(words_in_line: list[str]) -> int:
-            return int(ImageDraw.Draw(Image.new('RGB', (max_width, 1))).textlength(' '.join(words_in_line), font=font))
+        def get_line_width(line_: list[str]) -> int:
+            return int(ImageDraw.Draw(Image.new('RGB', (max_width, 1))).textlength(' '.join(line_), font=font))
 
         for word in words:
             line.append(word)
             line_width = get_line_width(line)
 
-            # If the line is too wide, move the word to the next line
-            if line_width > max_width:
+            if line_width > max_width:  # If the line is too wide, move the word to the next line
                 lines.append(' '.join(line[:-1]))
                 line = [word]  # Start a new line with the current word
 
-        # Add the last line
-        if line:
+        if line:  # Add the last line
             lines.append(' '.join(line))
 
         return lines

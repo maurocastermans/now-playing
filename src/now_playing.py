@@ -155,12 +155,11 @@ class NowPlaying:
     def _start_button_listener(self):
         def listen():
             while True:
-                if self.request.poll(timeout=0.1):
-                    events = self.request.read_edge_events()
-                    for event in events:
-                        index = self.OFFSETS.index(event.line_offset)
-                        button_label = NowPlaying.LABELS[index]
-                        self._logger.info(f"Button {button_label} pressed")
+                for event in self.request.read_edge_events():
+                    index = self.OFFSETS.index(event.line_offset)
+                    button_label = NowPlaying.LABELS[index]
+                    self._logger.info(f"Button {button_label} pressed")
+
         threading.Thread(target=listen, daemon=True).start()
 
 

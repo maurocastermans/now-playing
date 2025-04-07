@@ -7,6 +7,7 @@ from typing import Tuple, Final
 import gpiod
 import gpiodevice
 from gpiod.line import Bias, Direction, Edge
+import threading
 
 from logger import Logger
 from config import Config
@@ -54,6 +55,7 @@ class NowPlaying:
         self._clean_display_and_set_clean_state()
 
         self._setup_buttons()
+        self._start_button_listener()
 
     def _clean_display_and_set_clean_state(self) -> None:
         self._display_service.clean_display()
@@ -74,7 +76,7 @@ class NowPlaying:
                 else:
                     self._handle_no_music_detected()
 
-                self._handle_buttons()
+                # self._handle_buttons()
             except Exception as e:
                 self._logger.error(f"Error occurred: {e}")
                 self._logger.error(traceback.format_exc())
@@ -149,6 +151,17 @@ class NowPlaying:
     def _handle_exit(self, _sig, _frame):
         self._logger.warning(f"Stopping gracefully.")
         sys.exit(0)
+
+    def _start_button_listener(self):
+        def listen():
+            while True:
+                if self.request.poll(timeout=0.1):
+                    events = self.request.read_edge_events()
+                    for event in events:
+                        index = self.OFFSETS.index(event.line_offset)
+                        button_label = NowPlaying.LABELS[index]
+                        self._logger.info(f"Button {button_label} pressed")
+        threading.Thread(target=listen, daemon=True).start()
 
 
 if __name__ == "__main__":

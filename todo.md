@@ -6,3 +6,6 @@
 - [x] quotes single/double consistent
 - [x] python versie terug latest proberen -> gaat niet
 - [ ] inky laatste versie terug proberen
+
+sudo systemctl stop now-playing.service
+source venv/bin/activate

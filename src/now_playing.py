@@ -152,14 +152,17 @@ class NowPlaying:
         threading.Thread(target=listen, daemon=True).start()
 
     def _handle_button_a(self):
-        if not self._state_manager.get_state() == DisplayState.PLAYING:
-            return
-        title = self._state_manager.get_playing_state().song_title
-        artist = self._state_manager.get_playing_state().song_artist
-        track_uri = self._spotify_service.search_track_uri(title, artist)
-        if track_uri:
-            self._spotify_service.add_to_playlist(track_uri)
-
+        try:
+            if not self._state_manager.get_state() == DisplayState.PLAYING:
+                return
+            title = self._state_manager.get_playing_state().song_title
+            artist = self._state_manager.get_playing_state().song_artist
+            track_uri = self._spotify_service.search_track_uri(title, artist)
+            if track_uri:
+                self._spotify_service.add_to_playlist(track_uri)
+        except Exception as e:
+            self._logger.error(f"Error occurred: {e}")
+            self._logger.error(traceback.format_exc())
 
 if __name__ == "__main__":
     service = NowPlaying()

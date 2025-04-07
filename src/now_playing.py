@@ -51,13 +51,7 @@ class NowPlaying:
         self._song_identify_service: SongIdentifyService = SongIdentifyService()
         self._weather_service: WeatherService = WeatherService()
         self._display_service: DisplayService = DisplayService()
-        self._spotify_service = SpotifyService(
-            client_id=self._config["spotify_client_id"],
-            client_secret=self._config["spotify_client_secret"],
-            redirect_uri=self._config["spotify_redirect_uri"],
-            playlist_id=self._config["spotify_playlist_id"],
-            username=self._config["spotify_username"]
-        )
+        self._spotify_service = SpotifyService()
 
         self._state_manager: StateManager = StateManager()
         self._clean_display_and_set_clean_state()

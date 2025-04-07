@@ -154,10 +154,14 @@ class NowPlaying:
     def _handle_button_a(self):
         try:
             if not self._state_manager.get_state() == DisplayState.PLAYING:
+                self._logger.info("hier")
                 return
             title = self._state_manager.get_playing_state().song_title
+            self._logger.info(f"title: {title}")
             artist = self._state_manager.get_playing_state().song_artist
+            self._logger.info(f"artist: {artist}")
             track_uri = self._spotify_service.search_track_uri(title, artist)
+            self._logger.info(f"trackuri: {track_uri}")
             if track_uri:
                 self._spotify_service.add_to_playlist(track_uri)
         except Exception as e:

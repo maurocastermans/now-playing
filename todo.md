@@ -4,4 +4,5 @@
 - [ ] audio device constants in config yaml 
 - [ ] buttons gebruiken (add to spotify playlist, ...)
 - [x] quotes single/double consistent
-- [ ] python versie terug latest proberen
+- [x] python versie terug latest proberen -> gaat niet
+- [ ] inky laatste versie terug proberen

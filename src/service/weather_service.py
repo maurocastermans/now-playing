@@ -21,7 +21,7 @@ class WeatherInfo:
 class WeatherService:
     def __init__(self) -> None:
         self._logger: logging.Logger = Logger().get_logger()
-        self._config = Config().get_config()
+        self._config: dict = Config().get_config()
 
     def _build_request_url(self) -> str:
         base_url = "https://api.openweathermap.org/data/2.5/weather"

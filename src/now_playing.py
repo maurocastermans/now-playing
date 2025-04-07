@@ -4,6 +4,9 @@ import numpy as np
 import traceback
 import signal
 from typing import Tuple, Final
+import gpiod
+import gpiodevice
+from gpiod.line import Bias, Direction, Edge
 
 from logger import Logger
 from config import Config
@@ -22,6 +25,10 @@ class NowPlaying:
     AUDIO_DEVICE_NUMBER_OF_CHANNELS: Final[int] = 1
     AUDIO_RECORDING_DURATION_IN_SECONDS: Final[int] = 10
     SUPPORTED_SAMPLING_RATE_BY_MUSIC_DETECTION_AND_SONG_IDENTIFY: Final[int] = 16000
+
+    BUTTONS = [5, 6, 16, 24]
+    LABELS = ["A", "B", "C", "D"]
+    INPUT = gpiod.LineSettings(direction=Direction.INPUT, bias=Bias.PULL_UP, edge_detection=Edge.FALLING)
 
     def __init__(self) -> None:
         signal.signal(signal.SIGTERM, self._handle_exit)  # System or process termination
@@ -44,12 +51,19 @@ class NowPlaying:
         self._display_service: DisplayService = DisplayService()
 
         self._state_manager: StateManager = StateManager()
-
         self._clean_display_and_set_clean_state()
+
+        self._setup_buttons()
 
     def _clean_display_and_set_clean_state(self) -> None:
         self._display_service.clean_display()
         self._state_manager.set_clean_state()
+
+    def _setup_buttons(self):
+        chip = gpiodevice.find_chip_by_platform()
+        self.OFFSETS = [chip.line_offset_from_id(id) for id in NowPlaying.BUTTONS]
+        line_config = dict.fromkeys(self.OFFSETS, NowPlaying.INPUT)
+        self.request = chip.request_lines(consumer="inky7-buttons", config=line_config)
 
     def run(self) -> None:
         while True:
@@ -59,6 +73,8 @@ class NowPlaying:
                     self._handle_music_detected(audio)
                 else:
                     self._handle_no_music_detected()
+
+                self._handle_buttons()
             except Exception as e:
                 self._logger.error(f"Error occurred: {e}")
                 self._logger.error(traceback.format_exc())
@@ -114,6 +130,21 @@ class NowPlaying:
         self._state_manager.set_screensaver_state(weather_info)
         self._display_service.update_display_to_screensaver(weather_info)
         self._state_manager.increase_image_counter()
+
+    def _handle_buttons(self) -> None:
+        for event in self.request.read_edge_events():
+            index = self.OFFSETS.index(event.line_offset)
+            button_label = NowPlaying.LABELS[index]
+            self._logger.info(f"Button {button_label} pressed")
+
+            # if button_label == "A":
+            #     if self._state_manager.get_state().current == DisplayState.PLAYING:
+            #         song_info = self._state_manager.get_playing_state().song_title
+            #         if song_info:
+            #             self._spotify_service.add_song_to_playlist(song_info.title, song_info.artist)
+            #             self._logger.info(f"Added {song_info.title} to Spotify playlist")
+            #         else:
+            #             self._logger.info("No song playing to add to playlist")
 
     def _handle_exit(self, _sig, _frame):
         self._logger.warning(f"Stopping gracefully.")

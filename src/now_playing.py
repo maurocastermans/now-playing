@@ -19,6 +19,7 @@ from service.audio_recording_service import AudioRecordingService
 from service.music_detection_service import MusicDetectionService
 from service.weather_service import WeatherService, WeatherInfo
 from service.display_service import DisplayService
+from service.spotify_service import SpotifyService
 
 
 class NowPlaying:
@@ -50,22 +51,19 @@ class NowPlaying:
         self._song_identify_service: SongIdentifyService = SongIdentifyService()
         self._weather_service: WeatherService = WeatherService()
         self._display_service: DisplayService = DisplayService()
+        self._spotify_service = SpotifyService(
+            client_id=self._config["spotify_client_id"],
+            client_secret=self._config["spotify_client_secret"],
+            redirect_uri=self._config["spotify_redirect_uri"],
+            playlist_id=self._config["spotify_playlist_id"],
+            username=self._config["spotify_username"]
+        )
 
         self._state_manager: StateManager = StateManager()
         self._clean_display_and_set_clean_state()
 
         self._setup_buttons()
         self._start_button_listener()
-
-    def _clean_display_and_set_clean_state(self) -> None:
-        self._display_service.clean_display()
-        self._state_manager.set_clean_state()
-
-    def _setup_buttons(self):
-        chip = gpiodevice.find_chip_by_platform()
-        self.OFFSETS = [chip.line_offset_from_id(id) for id in NowPlaying.BUTTONS]
-        line_config = dict.fromkeys(self.OFFSETS, NowPlaying.INPUT)
-        self.request = chip.request_lines(consumer="inky7-buttons", config=line_config)
 
     def run(self) -> None:
         while True:
@@ -76,7 +74,6 @@ class NowPlaying:
                 else:
                     self._handle_no_music_detected()
 
-                # self._handle_buttons()
             except Exception as e:
                 self._logger.error(f"Error occurred: {e}")
                 self._logger.error(traceback.format_exc())
@@ -114,7 +111,7 @@ class NowPlaying:
     def _set_playing_state_and_update_display(self, song_info: SongInfo) -> None:
         if self._state_manager.should_clean_display():
             self._clean_display_and_set_clean_state()
-        self._state_manager.set_playing_state(song_info.title)
+        self._state_manager.set_playing_state(song_info.title, song_info.artist)
         self._display_service.update_display_to_playing(song_info)
         self._state_manager.increase_image_counter()
 
@@ -133,24 +130,19 @@ class NowPlaying:
         self._display_service.update_display_to_screensaver(weather_info)
         self._state_manager.increase_image_counter()
 
-    def _handle_buttons(self) -> None:
-        for event in self.request.read_edge_events():
-            index = self.OFFSETS.index(event.line_offset)
-            button_label = NowPlaying.LABELS[index]
-            self._logger.info(f"Button {button_label} pressed")
-
-            # if button_label == "A":
-            #     if self._state_manager.get_state().current == DisplayState.PLAYING:
-            #         song_info = self._state_manager.get_playing_state().song_title
-            #         if song_info:
-            #             self._spotify_service.add_song_to_playlist(song_info.title, song_info.artist)
-            #             self._logger.info(f"Added {song_info.title} to Spotify playlist")
-            #         else:
-            #             self._logger.info("No song playing to add to playlist")
-
     def _handle_exit(self, _sig, _frame):
         self._logger.warning(f"Stopping gracefully.")
         sys.exit(0)
+
+    def _clean_display_and_set_clean_state(self) -> None:
+        self._display_service.clean_display()
+        self._state_manager.set_clean_state()
+
+    def _setup_buttons(self):
+        chip = gpiodevice.find_chip_by_platform()
+        self.OFFSETS = [chip.line_offset_from_id(id) for id in NowPlaying.BUTTONS]
+        line_config = dict.fromkeys(self.OFFSETS, NowPlaying.INPUT)
+        self.request = chip.request_lines(consumer="inky7-buttons", config=line_config)
 
     def _start_button_listener(self):
         def listen():
@@ -158,9 +150,21 @@ class NowPlaying:
                 for event in self.request.read_edge_events():
                     index = self.OFFSETS.index(event.line_offset)
                     button_label = NowPlaying.LABELS[index]
-                    self._logger.info(f"Button {button_label} pressed")
+                    self._logger.debug(f"Button {button_label} pressed")
+
+                    if button_label == "A":
+                        self._handle_button_a()
 
         threading.Thread(target=listen, daemon=True).start()
+
+    def _handle_button_a(self):
+        if not self._state_manager.get_state() == DisplayState.PLAYING:
+            return
+        title = self._state_manager.get_playing_state().song_title
+        artist = self._state_manager.get_playing_state().song_artist
+        track_uri = self._spotify_service.search_track_uri(title, artist)
+        if track_uri:
+            self._spotify_service.add_to_playlist(track_uri)
 
 
 if __name__ == "__main__":

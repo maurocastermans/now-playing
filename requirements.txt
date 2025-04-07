@@ -9,3 +9,4 @@ inky
 tflite-runtime
 typing
 pyyaml
+spotipy

@@ -22,6 +22,7 @@ class StateData:
 @dataclass(frozen=True)
 class PlayingState(StateData):
     song_title: Optional[str] = None
+    song_artist: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -53,8 +54,8 @@ class StateManager:
     def set_clean_state(self) -> None:
         self._set_state(DisplayState.CLEAN, None)
 
-    def set_playing_state(self, song_title: str) -> None:
-        playing_state = PlayingState(song_title=song_title)
+    def set_playing_state(self, song_title: str, song_artist: str) -> None:
+        playing_state = PlayingState(song_title=song_title, song_artist=song_artist)
         self._set_state(DisplayState.PLAYING, playing_state)
 
     def set_screensaver_state(self, weather_info: WeatherInfo) -> None:
@@ -85,7 +86,7 @@ class StateManager:
     def music_still_playing_but_different_song_identified(self, song_title: str):
         if self._state.current != DisplayState.PLAYING:
             return False
-        if self._get_playing_state().song_title != song_title:
+        if self.get_playing_state().song_title != song_title:
             self._logger.info("Music still playing but new song identified.")
             return True
         return False
@@ -101,7 +102,7 @@ class StateManager:
     def get_state(self) -> AppState:
         return self._state
 
-    def _get_playing_state(self) -> PlayingState:
+    def get_playing_state(self) -> PlayingState:
         if self._state.current == DisplayState.PLAYING and isinstance(self._state.data, PlayingState):
             return self._state.data
         raise RuntimeError("Attempted to access PlayingState while not in PLAYING state.")

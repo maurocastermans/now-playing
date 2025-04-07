@@ -83,6 +83,14 @@ read -r openweathermap_api_key
 echo "Enter your location coordinates in the 'latitude,longitude' format:"
 read -r geo_coordinates
 
+echo "==> Setting up the Spotify API..."
+echo "Please enter your Spotify client ID:"
+read -r spotify_client_id
+echo "Please enter your Spotify client secret:"
+read -r spotify_client_secret
+echo "Please enter your Spotify playlist ID:"
+read -r spotify_playlist_id
+
 echo "==> Setting up the configuration in config.yaml..."
 cat <<EOF > "${install_path}/config/config.yaml"
 display:
@@ -103,6 +111,11 @@ display:
 weather:
   openweathermap_api_key: "${openweathermap_api_key}"
   geo_coordinates: "${geo_coordinates}"
+
+spotify:
+  client_id: "${spotify_client_id}"
+  client_secret: "${spotify_client_secret}"
+  playlist_id: ${spotify_playlist_id}
 
 log:
   log_file_path: "${install_path}/log/now_playing.log"

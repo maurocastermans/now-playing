@@ -87,22 +87,16 @@ modularity, and extensibility.
 Since Raspberry Pi OS Lite is headless (no browser), you must authorize Spotify once from a computer:
 
 1. On your PC or Mac, clone this repo:
-
 ```bash 
   git clone https://github.com/maurocastermans/now-playing
   cd now-playing
 ```
-
 2. Fill in your `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` in `spotify_auth_helper.py`
-
 3. Run:
-
 ```bash
   python3 spotify_auth_helper.py
 ```
-
 4. Follow the browser prompt and allow access to your Spotify account. This will generate a .cache file locally.
-
 5. Copy .cache to your Raspberry Pi project root
 
 Once copied, Spotipy will refresh the token automatically using the stored refresh token—no need to do this again unless

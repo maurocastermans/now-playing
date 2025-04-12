@@ -14,6 +14,7 @@ song, and displays the song information on an e-ink display.
 - When music is detected, identifies the song with [ShazamIO](https://github.com/shazamio/ShazamIO)
 - Displays song title, artist, and album cover on a 5.7" e-ink display
 - Pressing Button A on the e-ink display adds the current song to a Spotify playlist
+  with [Spotipy](https://spotipy.readthedocs.io/en/2.25.1/)
 - When no music is detected for a while, the display switches to a screensaver mode that shows the weather
 
 ## ✨ What's New?
@@ -45,12 +46,12 @@ modularity, and extensibility.
 ### 🔧 Required Hardware
 
 - [Raspberry Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/) *(or newer)*
-- [MicroSD card](https://www.raspberrypi.com/products/sd-cards/) 
+- [MicroSD card](https://www.raspberrypi.com/products/sd-cards/)
 - [Power supply](https://www.raspberrypi.com/products/sd-cards/)
 - Pimoroni Inky Impression e-ink display
-  - [Pimoroni Inky Impression 4"](https://shop.pimoroni.com/products/inky-impression-4?variant=39599238807635)
-  - [Pimoroni Inky Impression 5.7"](https://shop.pimoroni.com/products/inky-impression-5-7?variant=32298701324371)
-  - [Pimoroni Inky Impression 7.3"](https://shop.pimoroni.com/products/inky-impression-7-3?variant=55186435244411)
+    - [Pimoroni Inky Impression 4"](https://shop.pimoroni.com/products/inky-impression-4?variant=39599238807635)
+    - [Pimoroni Inky Impression 5.7"](https://shop.pimoroni.com/products/inky-impression-5-7?variant=32298701324371)
+    - [Pimoroni Inky Impression 7.3"](https://shop.pimoroni.com/products/inky-impression-7-3?variant=55186435244411)
 - USB microphone *(min. 16kHz sample rate)*
 - Optional: [3D printed case](https://github.com/scripsi/inky-impression-case)
 
@@ -80,22 +81,27 @@ modularity, and extensibility.
     5. Check the 'Terms of Service'
 3. Click on 'Save'
 4. Safely store your Client ID and Client Secret
-5. [Copy the Playlist ID](https://clients.caster.fm/knowledgebase/110/How-to-find-Spotify-playlist-ID.html#:~:text=To%20find%20the%20Spotify%20playlist,Link%22%20under%20the%20Share%20menu.&text=The%20playlist%20id%20is%20the,after%20playlist%2F%20as%20marked%20above.) of the playlist you want your songs to be added to
+5. [Copy the Playlist ID](https://clients.caster.fm/knowledgebase/110/How-to-find-Spotify-playlist-ID.html#:~:text=To%20find%20the%20Spotify%20playlist,Link%22%20under%20the%20Share%20menu.&text=The%20playlist%20id%20is%20the,after%20playlist%2F%20as%20marked%20above.)
+   of the playlist you want your songs to be added to
 
-### 🎟 Spotipy Access Token
+#### 🎟 Spotify Access Token
 
 Since Raspberry Pi OS Lite is headless (no browser), you must authorize Spotify once from a computer:
 
 1. On your PC or Mac, clone this repo:
+
 ```bash 
   git clone https://github.com/maurocastermans/now-playing
   cd now-playing
 ```
+
 2. Fill in your `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` in `spotify_auth_helper.py`
 3. Run:
+
 ```bash
   python3 spotify_auth_helper.py
 ```
+
 4. Follow the browser prompt and allow access to your Spotify account. This will generate a .cache file locally.
 5. Copy .cache to your Raspberry Pi project root
 

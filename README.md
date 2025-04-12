@@ -45,8 +45,8 @@ modularity, and extensibility.
 ### 🔧 Required Hardware
 
 - [Raspberry Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/) *(or newer)*
-- [MicroSD card](https://www.raspberrypi.com/products/sd-cards/)
-- [Raspberry Pi power supply](https://www.raspberrypi.com/products/sd-cards/)
+- [MicroSD card](https://www.raspberrypi.com/products/sd-cards/) 
+- [Power supply](https://www.raspberrypi.com/products/sd-cards/)
 - Pimoroni Inky Impression e-ink display
   - [Pimoroni Inky Impression 4"](https://shop.pimoroni.com/products/inky-impression-4?variant=39599238807635)
   - [Pimoroni Inky Impression 5.7"](https://shop.pimoroni.com/products/inky-impression-5-7?variant=32298701324371)
@@ -129,8 +129,6 @@ you change accounts.
 - Starts the now-playing service
 
 #### 📂 Example Config Structure
-
-Config values will auto-adjust based on selected screen during setup.
 
 ```yaml
 display:

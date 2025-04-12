@@ -92,12 +92,42 @@ echo "Please enter your Spotify playlist ID:"
 read -r spotify_playlist_id
 
 echo "==> Setting up the configuration in config.yaml..."
+echo "Select your Inky Impression display size:"
+echo "1) 4.0 inch"
+echo "2) 5.7 inch"
+echo "3) 7.3 inch"
+read -r -p "Enter choice (1/2/3): " display_size_choice
+
+case $display_size_choice in
+  1)
+    display_width=640
+    display_height=400
+    album_cover_size=200
+    ;;
+  2)
+    display_width=600
+    display_height=448
+    album_cover_size=250
+    ;;
+  3)
+    display_width=800
+    display_height=480
+    album_cover_size=300
+    ;;
+  *)
+    echo "Invalid choice. Defaulting to 5.7 inch settings."
+    display_width=600
+    display_height=448
+    album_cover_size=250
+    ;;
+esac
+
 cat <<EOF > "${install_path}/config/config.yaml"
 display:
-  width: 600
-  height: 448
+  width: $display_width
+  height: $display_height
   small_album_cover: true
-  small_album_cover_px: 250
+  small_album_cover_px: $album_cover_size
   screensaver_image: "${install_path}/resources/default.jpg"
   font_path: "${install_path}/resources/CircularStd-Bold.otf"
   font_size_title: 45

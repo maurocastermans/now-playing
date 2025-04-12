@@ -47,7 +47,10 @@ modularity, and extensibility.
 - [Raspberry Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/) *(or newer)*
 - [MicroSD card](https://www.raspberrypi.com/products/sd-cards/)
 - [Raspberry Pi power supply](https://www.raspberrypi.com/products/sd-cards/)
-- [Pimoroni Inky Impression 5.7" e-ink display](https://shop.pimoroni.com/products/inky-impression-5-7?variant=32298701324371)
+- Pimoroni Inky Impression e-ink display
+  - [Pimoroni Inky Impression 4"](https://shop.pimoroni.com/products/inky-impression-4?variant=39599238807635)
+  - [Pimoroni Inky Impression 5.7"](https://shop.pimoroni.com/products/inky-impression-5-7?variant=32298701324371)
+  - [Pimoroni Inky Impression 7.3"](https://shop.pimoroni.com/products/inky-impression-7-3?variant=55186435244411)
 - USB microphone *(min. 16kHz sample rate)*
 - Optional: [3D printed case](https://github.com/scripsi/inky-impression-case)
 
@@ -121,18 +124,20 @@ you change accounts.
 - Updates the system and installs dependencies
 - Sets up a Python virtual environment and installs Python packages
 - Creates config, log, and resources directories
-- Prompts for credentials and generates config.yaml
+- Prompts for credentials, your e-ink display size and generates config.yaml
 - Copies and configures a systemd service to autostart on boot
 - Starts the now-playing service
 
 #### 📂 Example Config Structure
 
+Config values will auto-adjust based on selected screen during setup.
+
 ```yaml
 display:
-  width: 600
-  height: 448
+  width: 600 # or 640 (4"), or 800 (7.3")
+  height: 448 # or 400 (4"), or 480 (7.3")
   small_album_cover: true
-  small_album_cover_px: 250
+  small_album_cover_px: 250 # or 200 (4"), or 300 (7.3")
   screensaver_image: "resources/default.jpg"
   font_path: "resources/CircularStd-Bold.otf"
   font_size_title: 45

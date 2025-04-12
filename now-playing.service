@@ -1,0 +1,14 @@
+[Unit]
+Description=Now Playing Service
+After=syslog.target network.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+SyslogIdentifier=now-playing
+LimitRTPRIO=99
+Restart=on-failure
+RestartSec=1s
+
+[Install]
+WantedBy=multi-user.target

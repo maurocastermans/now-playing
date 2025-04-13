@@ -12,7 +12,7 @@ song, and displays the song information on an e-ink display.
 - Detects music using a
   local [YAMNet](https://www.kaggle.com/models/google/yamnet/tensorFlow2/yamnet/1?tfhub-redirect=true) ML model
 - When music is detected, identifies the song with [ShazamIO](https://github.com/shazamio/ShazamIO)
-- Displays song title, artist, and album cover on a 5.7" e-ink display
+- Displays song title, artist, and album cover on an e-ink display
 - Pressing Button A on the e-ink display adds the current song to a Spotify playlist
   with [Spotipy](https://spotipy.readthedocs.io/en/2.25.1/)
 - When no music is detected for a while, the display switches to a screensaver mode that shows the weather
@@ -55,11 +55,11 @@ modularity, and extensibility.
 - USB microphone *(min. 16kHz sample rate)*
 - Optional: [3D printed case](https://github.com/scripsi/inky-impression-case)
 
-### 🥧 Raspberry PI OS Setup
+### 🥧 Raspberry Pi OS
 
-1. Flash Raspberry Pi OS Lite to your microSD card using
-   the [Raspberry Pi Imager](https://www.raspberrypi.com/documentation/computers/getting-started.html#installing-the-operating-system)
-2. Enable Wi-Fi and SSH in the setup wizard (because the OS is headless)
+1. Flash Raspberry Pi OS Lite to your microSD card
+   using [Raspberry Pi Imager](https://www.raspberrypi.com/documentation/computers/getting-started.html#installing-the-operating-system)
+2. Enable Wi-Fi and SSH (to allow remote access as the OS is headless) in the setup wizard
 
 ### 🔐 Required Credentials
 
@@ -68,7 +68,7 @@ modularity, and extensibility.
 1. Sign up at [OpenWeatherMap](https://openweathermap.org/)
 2. Generate your API key
 3. Safely store it
-4. Go to [Google Maps](https://www.google.com/maps) → search your location → right-click → copy coordinates
+4. Go to [Google Maps](https://www.google.com/maps) → Search your location → Right-click → Copy coordinates
 
 #### 🎵 Spotify API
 
@@ -102,11 +102,8 @@ Since Raspberry Pi OS Lite is headless (no browser), you must authorize Spotify 
   python3 spotify_auth_helper.py
 ```
 
-4. Follow the browser prompt and allow access to your Spotify account. This will generate a .cache file locally.
-5. Copy .cache to your Raspberry Pi project root
-
-Once copied, Spotipy will refresh the token automatically using the stored refresh token—no need to do this again unless
-you change accounts.
+4. Follow the browser prompt and allow access to your Spotify account. This will generate a .cache file locally
+   containing a Spotify access token.
 
 ### ⚙️ Installation Script
 
@@ -117,6 +114,9 @@ you change accounts.
   chmod +x setup.sh
   bash ./setup.sh
 ```
+
+Afterwards, copy the .cache file to your Raspberry Pi project root. Spotipy will refresh the token automatically using
+the stored refresh token—no need to do this again unless you change accounts.
 
 #### 🧙 What the Script Does
 

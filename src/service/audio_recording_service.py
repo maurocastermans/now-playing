@@ -48,7 +48,7 @@ class AudioRecordingService:
 
         try:
             self._logger.info(f"Recording for {duration} seconds at {self._sampling_rate} Hz.")
-            audio = sd.rec(int(duration * self._sampling_rate), dtype=np.int16)
+            audio = sd.rec(int(duration * self._sampling_rate), dtype=np.float32)
             sd.wait()
             self._logger.info("Recording finished.")
             return np.squeeze(audio)

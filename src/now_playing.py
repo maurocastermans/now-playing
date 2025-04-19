@@ -49,7 +49,7 @@ class NowPlaying:
         self._song_identify_service: SongIdentifyService = SongIdentifyService()
         self._weather_service: WeatherService = WeatherService()
         self._display_service: DisplayService = DisplayService()
-        self._spotify_service = SpotifyService()
+        self._spotify_service: SpotifyService = SpotifyService()
         self._state_manager: StateManager = StateManager()
 
         self._clean_display_and_set_clean_state()

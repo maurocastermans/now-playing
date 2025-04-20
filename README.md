@@ -52,7 +52,8 @@ modularity, and extensibility.
     - [Pimoroni Inky Impression 4"](https://shop.pimoroni.com/products/inky-impression-4?variant=39599238807635)
     - [Pimoroni Inky Impression 5.7"](https://shop.pimoroni.com/products/inky-impression-5-7?variant=32298701324371)
     - [Pimoroni Inky Impression 7.3"](https://shop.pimoroni.com/products/inky-impression-7-3?variant=55186435244411)
-- [USB microphone](https://www.amazon.com.be/microphone-portable-enregistrement-vid%C3%A9oconf%C3%A9rences-n%C3%A9cessaire/dp/B09PVPPRF2?source=ps-sl-shoppingads-lpcontext&ref_=fplfs&ref_=fplfs&psc=1&smid=A3HYZLWFA5CWB0&gQT=1) *(min. 16kHz sample rate)*
+- [USB microphone](https://www.amazon.com.be/microphone-portable-enregistrement-vid%C3%A9oconf%C3%A9rences-n%C3%A9cessaire/dp/B09PVPPRF2?source=ps-sl-shoppingads-lpcontext&ref_=fplfs&ref_=fplfs&psc=1&smid=A3HYZLWFA5CWB0&gQT=1)
+  *(min. 16kHz sample rate)*
 - Optional: [3D printed case](https://github.com/scripsi/inky-impression-case)
 
 ### 🥧 Raspberry Pi OS
@@ -128,7 +129,7 @@ the stored refresh token—no need to do this again unless you change accounts.
 - Copies and configures a systemd service to autostart on boot
 - Starts the now-playing service
 
-#### 📂 Example Config Structure
+#### 📂 Resulting Config Structure
 
 ```yaml
 display:
@@ -159,7 +160,7 @@ log:
   log_file_path: "log/now_playing.log"
 ```
 
-#### 📝 To Edit Config Later
+## 📝 Edit Configuration
 
 To update your configuration after installation:
 
@@ -214,6 +215,31 @@ To leave the virtual environment:
 ```
 
 ## 🐛 Known Issues
+
+### Low USB Microphone Gain
+
+Some USB microphones have very low default input gain, meaning they only pick up sound when your audio device is
+extremely close to the mic. This can cause issues with audio detection.
+
+To boost your microphone’s gain:
+
+1. Open the audio mixer
+
+```bash
+    alsamixer
+```
+
+2. Select your USB microphone
+    1. Press F6 to open the sound card list
+    2. Use the arrow keys to select your USB microphone device
+3. Adjust the input gain
+    1. Press F4 to switch to Capture controls
+    2. Increase the gain using the ↑ arrow key until it reaches an appropriate level
+4. Save the gain settings (so they persist after reboot)
+
+```bash
+  sudo alsactl store
+```
 
 ### GPIO Chip Conflict
 

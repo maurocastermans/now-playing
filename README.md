@@ -160,7 +160,9 @@ log:
   log_file_path: "log/now_playing.log"
 ```
 
-## 📝 Edit Configuration
+## 🛠 Useful Commands
+
+### 📝 Edit Configuration
 
 To update your configuration after installation:
 
@@ -173,8 +175,6 @@ After editing, restart the service to apply changes:
 ```bash
   sudo systemctl restart now-playing.service
 ```
-
-## 🛠 Useful Commands
 
 ### 🔁 Systemd Service
 
@@ -194,6 +194,7 @@ After editing, restart the service to apply changes:
 - Logs:
 
 ```bash
+  journalctl -u now-playing.service
   journalctl -u now-playing.service --since today
   journalctl -u now-playing.service -b
 ```
@@ -223,19 +224,19 @@ extremely close to the mic. This can cause issues with audio detection.
 
 To boost your microphone’s gain:
 
-1. Open the audio mixer
+1. Open the audio mixer:
 
 ```bash
     alsamixer
 ```
 
-2. Select your USB microphone
+2. Select your USB microphone:
     1. Press F6 to open the sound card list
     2. Use the arrow keys to select your USB microphone device
-3. Adjust the input gain
+3. Adjust the input gain:
     1. Press F4 to switch to Capture controls
     2. Increase the gain using the ↑ arrow key until it reaches an appropriate level
-4. Save the gain settings (so they persist after reboot)
+4. Save the gain settings (so they persist after reboot):
 
 ```bash
   sudo alsactl store

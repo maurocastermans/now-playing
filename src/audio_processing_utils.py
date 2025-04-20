@@ -24,12 +24,6 @@ class AudioProcessingUtils:
         try:
             AudioProcessingUtils._logger.debug(f"Converting audio to WAV format at {sampling_rate} Hz.")
             buffer = io.BytesIO()
-            # Normalize float32 audio before saving
-            if audio.dtype == np.float32:
-                max_val = np.max(np.abs(audio))
-                if max_val > 0:
-                    audio = (audio / max_val) * 0.99  # Avoid full-scale clipping
-                audio = np.int16(audio * 32767)
             wav.write(buffer, sampling_rate, audio)
             buffer.seek(0)
             return buffer

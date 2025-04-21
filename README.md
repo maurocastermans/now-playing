@@ -119,6 +119,8 @@ Since Raspberry Pi OS Lite is headless (no browser), you must authorize Spotify 
 Afterwards, copy the .cache file to your Raspberry Pi project root. Spotipy will refresh the token automatically using
 the stored refresh token—no need to do this again unless you change accounts.
 
+Should you encounter any issues, check [Known Issues](#-known-issues)
+
 #### 🧙 What the Script Does
 
 - Enables SPI and I2C
@@ -195,6 +197,7 @@ After editing, restart the service to apply changes:
 
 ```bash
   journalctl -u now-playing.service
+  journalctl -u now-playing.service --follow
   journalctl -u now-playing.service --since today
   journalctl -u now-playing.service -b
 ```

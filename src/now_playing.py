@@ -25,7 +25,7 @@ from service.spotify_service import SpotifyService
 class NowPlaying:
     AUDIO_DEVICE_SAMPLING_RATE: Final[int] = 44100
     AUDIO_DEVICE_NUMBER_OF_CHANNELS: Final[int] = 1
-    AUDIO_RECORDING_DURATION_IN_SECONDS: Final[int] = 10
+    AUDIO_RECORDING_DURATION_IN_SECONDS: Final[int] = 5
     SUPPORTED_SAMPLING_RATE_BY_MUSIC_DETECTION_MODEL: Final[int] = 16000
 
     BUTTONS = [5, 6, 16, 24]

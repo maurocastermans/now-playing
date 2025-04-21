@@ -26,7 +26,7 @@ class NowPlaying:
     AUDIO_DEVICE_SAMPLING_RATE: Final[int] = 44100
     AUDIO_DEVICE_NUMBER_OF_CHANNELS: Final[int] = 1
     AUDIO_RECORDING_DURATION_IN_SECONDS: Final[int] = 10
-    SUPPORTED_SAMPLING_RATE_BY_MUSIC_DETECTION_AND_SONG_IDENTIFY: Final[int] = 16000
+    SUPPORTED_SAMPLING_RATE_BY_MUSIC_DETECTION_MODEL: Final[int] = 16000
 
     BUTTONS = [5, 6, 16, 24]
     LABELS = ["A", "B", "C", "D"]
@@ -70,16 +70,16 @@ class NowPlaying:
                 self._logger.error(traceback.format_exc())
 
     def _record_audio_and_detect_music(self) -> Tuple[np.ndarray, bool]:
-        recorded_audio = self._audio_recording_service.record(
+        audio = self._audio_recording_service.record(
             duration=NowPlaying.AUDIO_RECORDING_DURATION_IN_SECONDS
         )
         resampled_audio = AudioProcessingUtils.resample(
-            recorded_audio,
+            audio,
             source_sampling_rate=NowPlaying.AUDIO_DEVICE_SAMPLING_RATE,
-            target_sampling_rate=NowPlaying.SUPPORTED_SAMPLING_RATE_BY_MUSIC_DETECTION_AND_SONG_IDENTIFY
+            target_sampling_rate=NowPlaying.SUPPORTED_SAMPLING_RATE_BY_MUSIC_DETECTION_MODEL
         )
         is_music_detected = self._music_detection_service.is_music_detected(resampled_audio)
-        return resampled_audio, is_music_detected
+        return audio, is_music_detected
 
     def _handle_music_detected(self, audio: np.ndarray) -> None:
         song_info = self._trigger_song_identify(audio)
@@ -93,9 +93,10 @@ class NowPlaying:
         self._state_manager.update_last_music_detected_time()
 
     def _trigger_song_identify(self, audio: np.ndarray) -> SongInfo:
+        int16_audio = AudioProcessingUtils.float32_to_int16(audio)
         wav_audio = AudioProcessingUtils.to_wav(
-            audio,
-            sampling_rate=NowPlaying.SUPPORTED_SAMPLING_RATE_BY_MUSIC_DETECTION_AND_SONG_IDENTIFY
+            int16_audio,
+            sampling_rate=NowPlaying.AUDIO_DEVICE_SAMPLING_RATE
         )
         return self._song_identify_service.identify(wav_audio)
 

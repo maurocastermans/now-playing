@@ -30,3 +30,13 @@ class AudioProcessingUtils:
         except Exception as e:
             AudioProcessingUtils._logger.error(f"WAV conversion failed: {e}")
             raise RuntimeError("WAV conversion failed.") from e
+
+    @staticmethod
+    def float32_to_int16(audio: np.ndarray) -> np.ndarray:
+        try:
+            AudioProcessingUtils._logger.debug("Converting float32 audio to int16.")
+            audio = np.clip(audio, -1.0, 1.0)  # Avoid overflow
+            return np.int16(audio * 32767)
+        except Exception as e:
+            AudioProcessingUtils._logger.error(f"Conversion to int16 failed: {e}")
+            raise RuntimeError("float32 to int16 conversion failed.") from e

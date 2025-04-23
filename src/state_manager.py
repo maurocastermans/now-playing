@@ -89,6 +89,7 @@ class StateManager:
         if self.get_playing_state().song_title != song_title:
             self._logger.info("Music still playing but new song identified.")
             return True
+        self._logger.debug("Same song still playing.")
         return False
 
     def screensaver_still_up_but_weather_info_outdated(self) -> bool:

@@ -66,5 +66,5 @@ class MusicDetectionService:
             self._logger.info(f"Music detected with confidence: {confidence:.2f}")
             return True
 
-        self._logger.info("No music detected.")
+        self._logger.debug("No music detected.")
         return False

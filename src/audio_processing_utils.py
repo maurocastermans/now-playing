@@ -12,7 +12,6 @@ class AudioProcessingUtils:
     @staticmethod
     def resample(audio: np.ndarray, source_sampling_rate: int, target_sampling_rate: int) -> np.ndarray:
         try:
-            AudioProcessingUtils._logger.debug(f"Resampling audio from {source_sampling_rate} Hz to {target_sampling_rate} Hz.")
             samples = int(len(audio) * target_sampling_rate / source_sampling_rate)
             return np.squeeze(resample(audio, samples))
         except Exception as e:
@@ -22,7 +21,6 @@ class AudioProcessingUtils:
     @staticmethod
     def to_wav(audio: np.ndarray, sampling_rate: int) -> io.BytesIO:
         try:
-            AudioProcessingUtils._logger.debug(f"Converting audio to WAV format at {sampling_rate} Hz.")
             buffer = io.BytesIO()
             wav.write(buffer, sampling_rate, audio)
             buffer.seek(0)
@@ -34,7 +32,6 @@ class AudioProcessingUtils:
     @staticmethod
     def float32_to_int16(audio: np.ndarray) -> np.ndarray:
         try:
-            AudioProcessingUtils._logger.debug("Converting float32 audio to int16.")
             audio = np.clip(audio, -1.0, 1.0)  # Avoid overflow
             return np.int16(audio * 32767)
         except Exception as e:

@@ -34,19 +34,20 @@ class DisplayService:
 
     def update_display_to_playing(self, song_info: SongInfo) -> None:
         album_cover_image = Image.open(requests.get(song_info.album_art, stream=True).raw)
-        display_image = self._generate_display_image(album_cover_image, song_info.title, song_info.artist)
+        display_image = self._generate_display_image(album_cover_image, song_info.title, song_info.artist,
+                                                     self._config['display']['small_album_cover'])
         self._show_image_on_display(display_image)
 
     def update_display_to_screensaver(self, weather_info: WeatherInfo) -> None:
         screensaver_image = Image.open(self._config['display']['screensaver_image'])
         display_image = self._generate_display_image(screensaver_image, weather_info.temperature,
-                                                     weather_info.sub_description)
+                                                     weather_info.sub_description, False)
         self._show_image_on_display(display_image)
 
-    def _generate_display_image(self, image: Image, title: str, subtitle: str) -> Image:
+    def _generate_display_image(self, image: Image, title: str, subtitle: str, small_album_cover: bool) -> Image:
         image = self._fit_background_image(image)
 
-        if self._config['display']['small_album_cover']:
+        if small_album_cover:
             self._add_smaller_album_cover(image)
 
         self._add_text(image, title, subtitle)

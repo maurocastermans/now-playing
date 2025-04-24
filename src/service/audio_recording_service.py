@@ -50,7 +50,6 @@ class AudioRecordingService:
             self._logger.info(f"Recording for {duration} seconds at {self._sampling_rate} Hz.")
             audio = sd.rec(int(duration * self._sampling_rate), dtype=np.float32)
             sd.wait()
-            self._logger.info("Recording finished.")
             return np.squeeze(audio)
         except Exception as e:
             self._logger.error(f"Recording failed: {e}")

@@ -28,7 +28,7 @@ This project builds on and refactors several previous works (see [LICENSE](./LIC
 All credits for the original idea go to them. While they laid the groundwork, this version focuses on clean code,
 modularity, and extensibility.
 
-### Improvements
+### ♻️ Improvements
 
 - Simplified, readable logic with meaningful function names
 - Clear separation of concerns with dedicated services (e.g., `DisplayService` has all logic concerning the e-ink
@@ -47,7 +47,7 @@ modularity, and extensibility.
 
 - [Raspberry Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/) *(or newer)*
 - [MicroSD card](https://www.raspberrypi.com/products/sd-cards/)
-- Power supply
+- [Power supply](https://www.raspberrypi.com/products/micro-usb-power-supply/)
 - Pimoroni Inky Impression e-ink display
     - [Pimoroni Inky Impression 4"](https://shop.pimoroni.com/products/inky-impression-4?variant=39599238807635)
     - [Pimoroni Inky Impression 5.7"](https://shop.pimoroni.com/products/inky-impression-5-7?variant=32298701324371)
@@ -131,7 +131,7 @@ Should you encounter any issues, check [Known Issues](#-known-issues)
 - Copies and configures a systemd service to autostart on boot
 - Starts the now-playing service
 
-#### 📂 Resulting Config Structure
+#### 📂 Resulting Config
 
 ```yaml
 display:
@@ -259,6 +259,21 @@ Just recently (16/08/2024), the GPIO Kernel Module in Raspberry PI OS changed
 ➡️ Check https://github.com/pimoroni/inky?tab=readme-ov-file#chip-select-line-8-gpio8-currently-claimed-by-spi0-cs0 and
 follow the instructions
 
+## 🔮 What's Next?
 
+### More Button Actions
+
+There are still three unused buttons on the e-ink display. These could be mapped to additional features.
+
+### HTML Rendering
+
+The Pimoroni Inky display actually supports [rendering HTML](https://github.com/pimoroni/inky/tree/main/examples/7color/html), opening up all sorts of design possibilities. 
+This could make the interface:
+
+- More customizable and visually rich
+- Easier to tweak via CSS/HTML templates
+- Support dynamic layouts or themes
+
+If you have more ideas for new features or you'd like to get involved, feel free to open an issue or submit a PR!
 
 

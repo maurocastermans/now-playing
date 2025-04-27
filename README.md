@@ -5,7 +5,10 @@ song, and displays the song information on an e-ink display.
 
 > This project was born out of a personal need: I love listening to vinyl, but since it's analog, I could never see what
 > track was playing. The same goes for films—I'd often reach for my phone to Shazam a song. Now, I just glance at my
-> display. Simple.
+> display.
+
+<img src="resources-readme/example-image-1.jpeg" width="45%" style="margin-right:15px;" alt=""/> 
+<img src="resources-readme/example-image-2.jpeg" width="45%" alt=""/>
 
 ## 🚀 Features
 

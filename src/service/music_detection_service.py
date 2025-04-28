@@ -3,21 +3,25 @@ import logging
 
 import numpy as np
 from tflite_runtime.interpreter import Interpreter
-from typing import List, Tuple
+from typing import List, Tuple, Final
 
 import sys
+
 sys.path.append("..")
 from logger import Logger
 
 
 class MusicDetectionService:
+    SAMPLING_RATE: Final[int] = 16000
+    CLASS_MAP_PATH: Final[str] = 'src/ml-model/yamnet_class_map.csv'
+    MODEL_PATH: Final[str] = 'src/ml-model/1.tflite'
+    CONFIDENCE_THRESHOLD: Final[float] = 0.2
+
     def __init__(self, audio_duration_in_seconds: int) -> None:
         self._logger: logging.Logger = Logger().get_logger()
         self._audio_duration_in_seconds: int = audio_duration_in_seconds
-        self._sampling_rate: int = 16000
-        self._class_map_path: str = 'src/ml-model/yamnet_class_map.csv'
 
-        self._interpreter: Interpreter = Interpreter('src/ml-model/1.tflite')
+        self._interpreter: Interpreter = Interpreter(MusicDetectionService.MODEL_PATH)
         self._configure_interpreter()
 
         self._class_names: List[str] = self._load_class_names()
@@ -30,19 +34,19 @@ class MusicDetectionService:
         self.scores_output_index = self.output_details[0]['index']
 
         # Resize input tensor to match the expected duration
-        input_shape = [self._audio_duration_in_seconds * self._sampling_rate]
+        input_shape = [self._audio_duration_in_seconds * MusicDetectionService.SAMPLING_RATE]
         self._interpreter.resize_tensor_input(self.waveform_input_index, input_shape, strict=True)
 
         self._interpreter.allocate_tensors()
 
     def _load_class_names(self) -> List[str]:
         try:
-            with open(self._class_map_path, 'r') as csv_file:
+            with open(MusicDetectionService.CLASS_MAP_PATH, 'r') as csv_file:
                 class_map_csv = csv.reader(csv_file)
                 next(class_map_csv)  # Skip header row
                 return [row[2] for row in class_map_csv]  # Only display_name column
         except FileNotFoundError:
-            self._logger.error(f"Class map file not found at {self._class_map_path}")
+            self._logger.error(f"Class map file not found at {MusicDetectionService.CLASS_MAP_PATH}")
             return []
 
     def _get_top_class(self, scores: np.ndarray) -> Tuple[str, float]:
@@ -62,7 +66,7 @@ class MusicDetectionService:
 
         top_class, confidence = self._get_top_class(scores)
 
-        if top_class == 'Music' and confidence > 0.2:
+        if top_class == 'Music' and confidence > MusicDetectionService.CONFIDENCE_THRESHOLD:
             self._logger.info(f"Music detected with confidence: {confidence:.2f}")
             return True
 

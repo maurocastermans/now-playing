@@ -45,7 +45,7 @@ modularity, and extensibility.
 - Type hints added for better clarity and IDE support
 - Configurations via YAML (no more messy INI files)
 - Cleaned up setup script for smoother installation
-- Singleton pattern for `Logging` and `Config`
+- Singleton pattern for `Logger` and `Config`
 - Threaded button control for responsiveness
 - Many more...
 

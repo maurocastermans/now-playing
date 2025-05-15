@@ -3,9 +3,9 @@
 **Now-playing** is a Python application for the Raspberry Pi that listens for background music, identifies the
 song, and displays the song information on an e-ink display.
 
-> This project was born out of a personal need: I love listening to vinyl, but since it's analog, I could never see what
-> track was playing. The same goes for films—I'd often reach for my phone to Shazam a song. Now, I just glance at my
-> display.
+> This project was born out of a personal need: I love listening to vinyl, but since it's analog, I wasn't able to
+> easily tell what song was playing. Sure, you can count the spaces in the grooves, but that's not exactly convenient.
+> The same goes for music in films—I'd often reach for my phone to Shazam a song. Now, I just glance at my display.
 
 <table>
 <tr>
@@ -13,7 +13,6 @@ song, and displays the song information on an e-ink display.
 <td><img src="resources-readme/example-image-2.jpeg" width="500px" alt="Example Image 2"/></td>
 </tr>
 </table>
-
 
 ## 🚀 Features
 
@@ -275,7 +274,9 @@ There are still three unused buttons on the e-ink display. These could be mapped
 
 ### HTML Rendering
 
-The Pimoroni Inky display actually supports [rendering HTML](https://github.com/pimoroni/inky/tree/main/examples/7color/html), opening up all sorts of design possibilities. 
+The Pimoroni Inky display actually
+supports [rendering HTML](https://github.com/pimoroni/inky/tree/main/examples/7color/html), opening up all sorts of
+design possibilities.
 This could make the interface:
 
 - More customizable and visually rich

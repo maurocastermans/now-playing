@@ -61,6 +61,8 @@ modularity, and extensibility.
     - [Pimoroni Inky Impression 7.3"](https://shop.pimoroni.com/products/inky-impression-7-3?variant=55186435244411)
 - [USB microphone](https://www.amazon.com.be/microphone-portable-enregistrement-vid%C3%A9oconf%C3%A9rences-n%C3%A9cessaire/dp/B09PVPPRF2?source=ps-sl-shoppingads-lpcontext&ref_=fplfs&ref_=fplfs&psc=1&smid=A3HYZLWFA5CWB0&gQT=1)
   *(min. 16kHz sample rate)*
+- [USB-A to Micro-USB adapter](https://www.amazon.com.be/-/nl/Magnet-Adapter-Compatibel-Smartphones-randapparatuur/dp/B0CCSK6TWR/ref=sr_1_4?dib=eyJ2IjoiMSJ9.tSkQ7Eow3VuzOmbOparC3w6W72C_2lR7qR6GDXXFon_pZWGesfG0THfUPlsK47bxatu_2L-ennJAbfJOnxkvAT4PFFmsaLdhD5TxbF6-b5x0BBZ0cBfAzrGtuyrV64W2uwanSiruEmp4YzTr0veXeH0LK_YwEbmg6Cle6MP-_0hbOrEqdH83qKTqznjk0VJGjp1CmIb6v7-nMhO1tOFbc92DTz2RPYz207CHCzUXVuhVMyWsGMFb8oPqwCK_YbKaQtH0P0bKZqHN-uCreQRhWDefUiY6TUM6f6ryPNx2IaI.jD_UeNFvfX1JIecvwtP37jqDSlPx_A_PXUSiTBfzqCU&dib_tag=se&keywords=usb+a+to+micro+usb&qid=1752774830&s=electronics&sr=1-4)
+  *(if your microphone is of type USB-A)*
 - Optional: [3D printed case](https://github.com/scripsi/inky-impression-case)
 
 ### 🥧 Raspberry Pi OS
@@ -111,11 +113,13 @@ Since Raspberry Pi OS Lite is headless (no browser), you must authorize Spotify 
 ```
 
 4. Follow the browser prompt and allow access to your Spotify account. This will generate a .cache file locally
-   containing a Spotify access token.
+   containing your Spotify access token.
 
 ### ⚙️ Installation Script
 
 #### 📥 Download and Run
+
+SSH into your Raspberry Pi and run:
 
 ```bash
   wget https://raw.githubusercontent.com/maurocastermans/now-playing/main/setup.sh
@@ -123,10 +127,10 @@ Since Raspberry Pi OS Lite is headless (no browser), you must authorize Spotify 
   bash ./setup.sh
 ```
 
-Afterwards, copy the .cache file to your Raspberry Pi project root. Spotipy will refresh the token automatically using
-the stored refresh token—no need to do this again unless you change accounts.
+Afterwards, copy the .cache file from your local computer to the now-playing project root. Spotipy will refresh the token automatically using
+the stored refresh token—no need to do this again (unless you change accounts).
 
-Should you encounter any issues, check [Known Issues](#-known-issues)
+Should you encounter any errors or issues after installation, check [Known Issues](#-known-issues)
 
 #### 🧙 What the Script Does
 
